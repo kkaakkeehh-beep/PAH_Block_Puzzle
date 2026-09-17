@@ -5,7 +5,10 @@
 //  - "pointy": pointy-top hexagons (vertex up/down). There's no single clean
 //    "straight down" axial step here -- (0,+1) then (-1,+1) cancels out to
 //    pure vertical over two rows -- so gravity alternates by row parity to
-//    stay net-vertical (see fallStep).
+//    stay net-vertical (see fallStepCandidates). That alternation is only a
+//    preference, though: if the parity-preferred cell is blocked but the
+//    other diagonal is open, a piece must still fall through it, or it locks
+//    in place while visibly floating over empty cells.
 const SQRT3 = Math.sqrt(3);
 
 let ORIENTATION = 'flat';
@@ -35,10 +38,13 @@ function offsetToAxial(col, row) {
   return [col - Math.floor(row / 2), row];
 }
 
-function fallStep(q, r) {
-  if (ORIENTATION === 'flat') return [q, r + 1];
-  const dq = (((r % 2) + 2) % 2) !== 0 ? -1 : 0;
-  return [q + dq, r + 1];
+// Returns candidate next-row cells in preference order. The caller should
+// try each in turn and use the first that's actually free.
+function fallStepCandidates(q, r) {
+  if (ORIENTATION === 'flat') return [[q, r + 1]];
+  const preferredDq = (((r % 2) + 2) % 2) !== 0 ? -1 : 0;
+  const otherDq = preferredDq === -1 ? 0 : -1;
+  return [[q + preferredDq, r + 1], [q + otherDq, r + 1]];
 }
 
 function axialToPixel(q, r, size) {

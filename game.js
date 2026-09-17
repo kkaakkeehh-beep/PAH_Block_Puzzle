@@ -180,9 +180,11 @@
   }
 
   function tryFall(piece) {
-    const [nq, nr] = fallStep(piece.anchorQ, piece.anchorR);
-    const trial = { ...piece, anchorQ: nq, anchorR: nr };
-    return canPlaceCells(board, fallCells(trial)) ? trial : null;
+    for (const [nq, nr] of fallStepCandidates(piece.anchorQ, piece.anchorR)) {
+      const trial = { ...piece, anchorQ: nq, anchorR: nr };
+      if (canPlaceCells(board, fallCells(trial))) return trial;
+    }
+    return null;
   }
 
   function tryMoveDown() {
