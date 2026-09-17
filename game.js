@@ -30,8 +30,24 @@
   const BASE_DROP_MS = 800;
   const MIN_DROP_MS = 120;
   const LINES_PER_LEVEL = 8;
+  const TIME_SPEEDUP_INTERVAL_MS = 20000;
+  const DROP_MS_PER_LEVEL = 50;
   const HIGH_SCORE_KEY = 'pahBlockPuzzleHighScore';
   const TRAY_SIZE = 3;
+
+  // Level (shown in the HUD) climbs from lines cleared OR just from time
+  // spent playing, whichever is higher -- so a round that never completes a
+  // line still ramps up, and the displayed Level always matches what's
+  // actually driving the fall speed instead of only tracking line clears.
+  function computeLevel(clearedLines, playedMs) {
+    const lineLevel = 1 + Math.floor(clearedLines / LINES_PER_LEVEL);
+    const timeLevel = 1 + Math.floor(playedMs / TIME_SPEEDUP_INTERVAL_MS);
+    return Math.max(lineLevel, timeLevel);
+  }
+
+  function dropIntervalForLevel(lvl) {
+    return Math.max(MIN_DROP_MS, BASE_DROP_MS - (lvl - 1) * DROP_MS_PER_LEVEL);
+  }
 
   const boardCanvas = document.getElementById('board-canvas');
   const boardCtx = boardCanvas.getContext('2d');
@@ -84,6 +100,7 @@
   let current, next;
   let dropIntervalMs = BASE_DROP_MS;
   let dropAccumulator = 0;
+  let elapsedMs = 0;
   let lastFrameTime = null;
 
   // place-mode state
@@ -119,10 +136,9 @@
     }
     linesCleared += cleared.length;
     score += 100 * cleared.length * cleared.length * level;
-    const newLevel = 1 + Math.floor(linesCleared / LINES_PER_LEVEL);
-    if (newLevel !== level) {
-      level = newLevel;
-      if (mode === 'fall') dropIntervalMs = Math.max(MIN_DROP_MS, BASE_DROP_MS - (level - 1) * 60);
+    if (mode === 'fall') {
+      level = computeLevel(linesCleared, elapsedMs);
+      dropIntervalMs = dropIntervalForLevel(level);
     }
     updateHud();
     flashRows = cleared;
@@ -432,6 +448,7 @@
     if (mode === 'fall') {
       dropIntervalMs = BASE_DROP_MS;
       dropAccumulator = 0;
+      elapsedMs = 0;
       lastFrameTime = null;
       current = newFallingPiece(spawnPiece());
       next = spawnPiece();
@@ -531,6 +548,13 @@
     }
 
     if (screen === 'game' && mode === 'fall' && running && !paused && !document.hidden) {
+      elapsedMs += dt;
+      const newLevel = computeLevel(linesCleared, elapsedMs);
+      if (newLevel !== level) {
+        level = newLevel;
+        updateHud();
+      }
+      dropIntervalMs = dropIntervalForLevel(level);
       dropAccumulator += dt;
       if (current && dropAccumulator >= dropIntervalMs) {
         dropAccumulator = 0;
