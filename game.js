@@ -319,8 +319,20 @@
   // Press a tray piece and drag onto the board; the board-preview follows
   // the pointer the whole way (via hoverAxial) so it's clear where it'll
   // land even on touch, where there's no hover state to show it beforehand.
+  //
+  // Tracks the drag via window-level pointermove/pointerup rather than
+  // setPointerCapture on the tray canvas -- capture support for canvas
+  // elements is inconsistent on some real mobile browsers, whereas a
+  // window listener gated on "is a drag active" works everywhere and
+  // doesn't care which element the pointer is currently over.
+  //
+  // If the pointer goes up without ever reaching the board (a plain tap,
+  // or a drag gesture that just didn't register for some reason), it falls
+  // back to the old tap-to-select-then-tap-the-board flow instead of
+  // silently doing nothing, so there's always a working path.
   function bindTrayDragControls() {
     let draggingSlot = -1;
+    let draggingPointerId = null;
 
     function updateHoverFromEvent(e) {
       const rect = boardCanvas.getBoundingClientRect();
@@ -328,44 +340,65 @@
       hoverAxial = inside ? boardPointerToAxial(e.clientX, e.clientY) : null;
     }
 
-    function endDrag(e) {
+    function endDrag() {
       if (draggingSlot < 0) return;
       const slot = draggingSlot;
       draggingSlot = -1;
-      if (hoverAxial && running && flashTimer === 0) placeAt(slot, hoverAxial[0], hoverAxial[1]);
+      draggingPointerId = null;
+      if (hoverAxial && running && flashTimer === 0) {
+        placeAt(slot, hoverAxial[0], hoverAxial[1]);
+      } else {
+        selectedSlot = selectedSlot === slot ? -1 : slot;
+      }
       hoverAxial = null;
-      selectedSlot = -1;
       renderTray();
     }
+
+    window.addEventListener('pointermove', (e) => {
+      if (draggingSlot < 0 || e.pointerId !== draggingPointerId) return;
+      updateHoverFromEvent(e);
+      e.preventDefault();
+    }, { passive: false });
+    window.addEventListener('pointerup', (e) => {
+      if (draggingSlot < 0 || e.pointerId !== draggingPointerId) return;
+      endDrag();
+    });
+    window.addEventListener('pointercancel', (e) => {
+      if (draggingSlot < 0 || e.pointerId !== draggingPointerId) return;
+      draggingSlot = -1;
+      draggingPointerId = null;
+      hoverAxial = null;
+      renderTray();
+    });
 
     trayUi.forEach((ui, i) => {
       ui.canvas.addEventListener('pointerdown', (e) => {
         if (!tray[i] || !running || flashTimer > 0) return;
         draggingSlot = i;
-        selectedSlot = i;
-        renderTray();
-        try { ui.canvas.setPointerCapture(e.pointerId); } catch (err) { /* non-capturable pointer -- drag state above still holds */ }
+        draggingPointerId = e.pointerId;
         updateHoverFromEvent(e);
         e.preventDefault();
       });
-      ui.canvas.addEventListener('pointermove', (e) => {
-        if (draggingSlot !== i) return;
-        updateHoverFromEvent(e);
-      });
-      ui.canvas.addEventListener('pointerup', (e) => {
-        if (draggingSlot !== i) return;
-        endDrag(e);
-      });
-      ui.canvas.addEventListener('pointercancel', () => {
-        if (draggingSlot !== i) return;
-        draggingSlot = -1;
-        hoverAxial = null;
-        selectedSlot = -1;
-        renderTray();
-      });
+    });
+
+    // Fallback path: a slot tap-selected above (drag released short of the
+    // board) gets placed by a plain tap/click on the board.
+    boardCanvas.addEventListener('pointermove', (e) => {
+      if (mode !== 'place' || selectedSlot < 0 || draggingSlot >= 0) return;
+      hoverAxial = boardPointerToAxial(e.clientX, e.clientY);
+    });
+    boardCanvas.addEventListener('mouseleave', () => {
+      if (draggingSlot < 0 && selectedSlot < 0) hoverAxial = null;
+    });
+    boardCanvas.addEventListener('click', (e) => {
+      if (mode !== 'place' || selectedSlot < 0 || draggingSlot >= 0 || !running || flashTimer > 0) return;
+      const [q, r] = boardPointerToAxial(e.clientX, e.clientY);
+      placeAt(selectedSlot, q, r);
     });
   }
 
+  // Same window-level tracking approach as bindTrayDragControls, and for
+  // the same reason: no dependency on setPointerCapture.
   function bindSwipeControls() {
     const SWIPE_MIN_DIST = 28;
     let startX = 0, startY = 0, tracking = false, pointerId = null;
@@ -376,14 +409,13 @@
       startY = e.clientY;
       tracking = true;
       pointerId = e.pointerId;
-      try { boardCanvas.setPointerCapture(pointerId); } catch (err) { /* non-capturable pointer -- drag state above still holds */ }
     });
 
-    boardCanvas.addEventListener('pointermove', (e) => {
+    window.addEventListener('pointermove', (e) => {
       if (tracking && e.pointerId === pointerId && mode === 'fall') e.preventDefault();
     }, { passive: false });
 
-    boardCanvas.addEventListener('pointerup', (e) => {
+    window.addEventListener('pointerup', (e) => {
       if (!tracking || e.pointerId !== pointerId) return;
       tracking = false;
       if (mode !== 'fall' || !running || paused || !current) return;
@@ -399,7 +431,9 @@
       }
     });
 
-    boardCanvas.addEventListener('pointercancel', () => { tracking = false; });
+    window.addEventListener('pointercancel', (e) => {
+      if (e.pointerId === pointerId) tracking = false;
+    });
   }
 
   function renderTray() {
