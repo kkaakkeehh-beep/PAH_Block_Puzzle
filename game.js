@@ -536,7 +536,7 @@
   function setPaused(value) {
     if (mode !== 'fall' || !running) return;
     paused = value;
-    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    pauseBtn.textContent = t(paused ? 'game.resume' : 'game.pause');
     pausedOverlay.classList.toggle('hidden', !paused);
   }
 
@@ -553,7 +553,7 @@
     overlay.classList.add('hidden');
     running = true;
     paused = false;
-    pauseBtn.textContent = 'Pause';
+    pauseBtn.textContent = t('game.pause');
     pausedOverlay.classList.add('hidden');
     selectedSlot = -1;
     hoverAxial = null;

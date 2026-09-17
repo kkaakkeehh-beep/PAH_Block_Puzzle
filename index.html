@@ -9,11 +9,11 @@
 <body>
 <div id="app">
   <header>
-    <h1>PAH Block Puzzle<span class="subtitle">多環芳香族ブロックパズル</span></h1>
+    <h1>PAH Block Puzzle<span class="subtitle" data-i18n="subtitle">Polycyclic Aromatic Block Puzzle</span></h1>
     <div class="scores">
-      <div class="score-box"><span class="label">Score</span><span id="score">0</span></div>
-      <div class="score-box"><span class="label">Best</span><span id="best-score">0</span></div>
-      <div class="score-box hidden" id="level-box"><span class="label">Level</span><span id="level">1</span></div>
+      <div class="score-box"><span class="label" data-i18n="score">Score</span><span id="score">0</span></div>
+      <div class="score-box"><span class="label" data-i18n="best">Best</span><span id="best-score">0</span></div>
+      <div class="score-box hidden" id="level-box"><span class="label" data-i18n="level">Level</span><span id="level">1</span></div>
     </div>
   </header>
 
@@ -81,65 +81,68 @@
         <circle cx="135" cy="160" r="4.2" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>
       </g>
     </svg>
-    <p class="home-tagline">Fused-ring molecules, hex by hex. Pick a way to play.</p>
+
+    <div id="lang-selector"></div>
+
+    <p class="home-tagline" data-i18n="home.tagline">Fused-ring molecules, hex by hex. Pick a way to play.</p>
     <div class="home-cards">
       <button class="home-card" id="home-fall-btn">
         <span class="home-card-icon">⬡</span>
-        <h2>Falling</h2>
-        <p>Molecules fall like Tetris — steer, rotate, and clear full rows before they stack up.</p>
+        <h2 data-i18n="home.fallingTitle">Falling</h2>
+        <p data-i18n="home.fallingDesc">Molecules fall like Tetris — steer, rotate, and clear full rows before they stack up.</p>
       </button>
       <button class="home-card" id="home-place-btn">
         <span class="home-card-icon">⬢</span>
-        <h2>Placing</h2>
-        <p>No rush — pick a molecule from the tray and fit it onto the board anywhere it goes.</p>
+        <h2 data-i18n="home.placingTitle">Placing</h2>
+        <p data-i18n="home.placingDesc">No rush — pick a molecule from the tray and fit it onto the board anywhere it goes.</p>
       </button>
     </div>
   </div>
 
   <div id="orientation-screen" class="hidden">
-    <p class="home-tagline">Which way should the hexagons point?</p>
+    <p class="home-tagline" data-i18n="orientation.tagline">Which way should the hexagons point?</p>
     <div class="difficulty-cards">
       <button class="difficulty-card" data-orientation="flat">
         <span class="home-card-icon icon-rotated-hex">⬡</span>
-        <h2>Flat-top</h2>
-        <p>Falls in a perfectly straight column; side-to-side moves drift slightly.</p>
+        <h2 data-i18n="orientation.flatTitle">Flat-top</h2>
+        <p data-i18n="orientation.flatDesc">Falls in a perfectly straight column; side-to-side moves drift slightly.</p>
       </button>
       <button class="difficulty-card" data-orientation="pointy">
         <span class="home-card-icon">⬡</span>
-        <h2>Pointy-top</h2>
-        <p>Side-to-side moves are perfectly straight; the fall drifts slightly.</p>
+        <h2 data-i18n="orientation.pointyTitle">Pointy-top</h2>
+        <p data-i18n="orientation.pointyDesc">Side-to-side moves are perfectly straight; the fall drifts slightly.</p>
       </button>
     </div>
-    <button id="orientation-back-btn" class="text-back-btn">← Back</button>
+    <button id="orientation-back-btn" class="text-back-btn">← <span data-i18n="back">Back</span></button>
   </div>
 
   <div id="difficulty-screen" class="hidden">
-    <p class="home-tagline">How complex should the molecules get?</p>
+    <p class="home-tagline" data-i18n="difficulty.tagline">How complex should the molecules get?</p>
     <div class="difficulty-cards">
       <button class="difficulty-card" data-factor="0.55">
-        <h2>Easy</h2>
-        <p>Mostly benzene and naphthalene, a few bigger ones.</p>
+        <h2 data-i18n="difficulty.easyTitle">Easy</h2>
+        <p data-i18n="difficulty.easyDesc">Mostly benzene and naphthalene, a few bigger ones.</p>
       </button>
       <button class="difficulty-card" data-factor="1">
-        <h2>Normal</h2>
-        <p>A balanced mix across the whole set.</p>
+        <h2 data-i18n="difficulty.normalTitle">Normal</h2>
+        <p data-i18n="difficulty.normalDesc">A balanced mix across the whole set.</p>
       </button>
       <button class="difficulty-card" data-factor="1.6">
-        <h2>Hard</h2>
-        <p>Bigger fused rings show up often.</p>
+        <h2 data-i18n="difficulty.hardTitle">Hard</h2>
+        <p data-i18n="difficulty.hardDesc">Bigger fused rings show up often.</p>
       </button>
       <button class="difficulty-card" data-factor="2.3">
-        <h2>Expert</h2>
-        <p>Coronene and friends, frequently.</p>
+        <h2 data-i18n="difficulty.expertTitle">Expert</h2>
+        <p data-i18n="difficulty.expertDesc">Coronene and friends, frequently.</p>
       </button>
     </div>
-    <button id="difficulty-back-btn" class="text-back-btn">← Back</button>
+    <button id="difficulty-back-btn" class="text-back-btn">← <span data-i18n="back">Back</span></button>
   </div>
 
   <div id="game-screen" class="hidden">
     <div id="mode-toggle" role="tablist">
-      <button id="home-btn" aria-label="Home">🏠</button>
-      <button id="pause-btn">Pause</button>
+      <button id="home-btn" data-i18n-aria="game.home" aria-label="Home">🏠</button>
+      <button id="pause-btn" data-i18n="game.pause">Pause</button>
     </div>
 
     <div class="play-area">
@@ -149,47 +152,48 @@
       <aside id="side-panel">
         <div id="fall-panel">
           <div class="panel-block">
-            <h2>Next</h2>
+            <h2 data-i18n="game.next">Next</h2>
             <canvas id="next-canvas"></canvas>
             <div id="next-label" class="molecule-label"></div>
           </div>
           <div class="panel-block">
-            <h2>Falling</h2>
+            <h2 data-i18n="game.fallingLabel">Falling</h2>
             <div id="current-label" class="molecule-label"></div>
           </div>
         </div>
         <div id="place-panel" class="hidden"></div>
-        <button id="new-game-btn">New Game</button>
+        <button id="new-game-btn" data-i18n="game.newGame">New Game</button>
       </aside>
     </div>
 
     <div id="touch-controls">
-      <button id="btn-left" aria-label="Left">◀</button>
-      <button id="btn-rotate" aria-label="Rotate">↻</button>
-      <button id="btn-right" aria-label="Right">▶</button>
-      <button id="btn-down" aria-label="Soft drop">▼</button>
-      <button id="btn-drop" aria-label="Hard drop">⤓</button>
+      <button id="btn-left" data-i18n-aria="controls.left" aria-label="Left">◀</button>
+      <button id="btn-rotate" data-i18n-aria="controls.rotate" aria-label="Rotate">↻</button>
+      <button id="btn-right" data-i18n-aria="controls.right" aria-label="Right">▶</button>
+      <button id="btn-down" data-i18n-aria="controls.softDrop" aria-label="Soft drop">▼</button>
+      <button id="btn-drop" data-i18n-aria="controls.hardDrop" aria-label="Hard drop">⤓</button>
     </div>
   </div>
 
   <div id="game-over-overlay" class="hidden">
     <div class="game-over-card">
-      <h2>Game Over</h2>
-      <p>Final score</p>
+      <h2 data-i18n="gameOver.title">Game Over</h2>
+      <p data-i18n="gameOver.finalScore">Final score</p>
       <p id="final-score">0</p>
-      <p id="new-best" class="hidden">New best score!</p>
-      <button id="restart-btn">New Game</button>
+      <p id="new-best" class="hidden" data-i18n="gameOver.newBest">New best score!</p>
+      <button id="restart-btn" data-i18n="game.newGame">New Game</button>
     </div>
   </div>
 
   <div id="paused-overlay" class="hidden">
     <div class="game-over-card">
-      <h2>Paused</h2>
-      <button id="resume-btn">Resume</button>
+      <h2 data-i18n="paused.title">Paused</h2>
+      <button id="resume-btn" data-i18n="game.resume">Resume</button>
     </div>
   </div>
 </div>
 
+<script src="i18n.js"></script>
 <script src="hexmath.js"></script>
 <script src="pieces.js"></script>
 <script src="board.js"></script>
