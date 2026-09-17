@@ -306,6 +306,7 @@
     placePanel.classList.toggle('hidden', mode !== 'place');
     touchControls.classList.toggle('hidden', mode !== 'fall');
     levelBox.classList.toggle('hidden', mode !== 'fall');
+    pauseBtn.classList.toggle('hidden', mode !== 'fall');
     resetGame();
   }
 

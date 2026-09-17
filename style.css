@@ -182,6 +182,7 @@ h1 .subtitle {
 #fall-panel.hidden { display: none; }
 #level-box.hidden { display: none; }
 #touch-controls.hidden { display: none; }
+#pause-btn.hidden { display: none; }
 
 .tray-slot {
   border: 2px solid transparent;
