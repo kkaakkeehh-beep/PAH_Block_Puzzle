@@ -10,9 +10,9 @@
 <div id="app">
   <header>
     <h1>PAH Block Puzzle<span class="subtitle" data-i18n="subtitle">Polycyclic Aromatic Block Puzzle</span></h1>
-    <div class="scores">
+    <div class="scores hidden" id="scores">
       <div class="score-box"><span class="label" data-i18n="score">Score</span><span id="score">0</span></div>
-      <div class="score-box"><span class="label" data-i18n="best">Best</span><span id="best-score">0</span></div>
+      <div class="score-box"><span class="label"><span data-i18n="best">Best</span><span id="best-mode-tag"></span></span><span id="best-score">0</span></div>
       <div class="score-box hidden" id="level-box"><span class="label" data-i18n="level">Level</span><span id="level">1</span></div>
     </div>
   </header>
@@ -90,11 +90,13 @@
         <span class="home-card-icon">⬡</span>
         <h2 data-i18n="home.fallingTitle">Falling</h2>
         <p data-i18n="home.fallingDesc">Molecules fall like Tetris — steer, rotate, and clear full rows before they stack up.</p>
+        <p class="home-card-best"><span data-i18n="best">Best</span> <span id="home-fall-best">0</span></p>
       </button>
       <button class="home-card" id="home-place-btn">
         <span class="home-card-icon">⬢</span>
         <h2 data-i18n="home.placingTitle">Placing</h2>
         <p data-i18n="home.placingDesc">No rush — pick a molecule from the tray and fit it onto the board anywhere it goes.</p>
+        <p class="home-card-best"><span data-i18n="best">Best</span> <span id="home-place-best">0</span></p>
       </button>
     </div>
   </div>
@@ -119,19 +121,19 @@
   <div id="difficulty-screen" class="hidden">
     <p class="home-tagline" data-i18n="difficulty.tagline">How complex should the molecules get?</p>
     <div class="difficulty-cards">
-      <button class="difficulty-card" data-factor="0.55">
+      <button class="difficulty-card" data-factor="0.55" data-difficulty="easy">
         <h2 data-i18n="difficulty.easyTitle">Easy</h2>
         <p data-i18n="difficulty.easyDesc">Mostly benzene and naphthalene, a few bigger ones.</p>
       </button>
-      <button class="difficulty-card" data-factor="1">
+      <button class="difficulty-card" data-factor="1" data-difficulty="normal">
         <h2 data-i18n="difficulty.normalTitle">Normal</h2>
         <p data-i18n="difficulty.normalDesc">A balanced mix across the whole set.</p>
       </button>
-      <button class="difficulty-card" data-factor="1.6">
+      <button class="difficulty-card" data-factor="1.6" data-difficulty="hard">
         <h2 data-i18n="difficulty.hardTitle">Hard</h2>
         <p data-i18n="difficulty.hardDesc">Bigger fused rings show up often.</p>
       </button>
-      <button class="difficulty-card" data-factor="2.3">
+      <button class="difficulty-card" data-factor="2.3" data-difficulty="expert">
         <h2 data-i18n="difficulty.expertTitle">Expert</h2>
         <p data-i18n="difficulty.expertDesc">Coronene and friends, frequently.</p>
       </button>
@@ -180,6 +182,8 @@
       <h2 data-i18n="gameOver.title">Game Over</h2>
       <p data-i18n="gameOver.finalScore">Final score</p>
       <p id="final-score">0</p>
+      <p id="run-summary"></p>
+      <p id="game-over-best"></p>
       <p id="new-best" class="hidden" data-i18n="gameOver.newBest">New best score!</p>
       <button id="share-native-btn" class="hidden" data-i18n="share.button">Share</button>
       <div id="share-row">

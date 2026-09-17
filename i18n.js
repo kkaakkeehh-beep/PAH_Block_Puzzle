@@ -31,6 +31,9 @@ const TRANSLATIONS = {
     "paused.title": "Paused",
     "share.button": "Share", "share.copyLink": "Copy link", "share.copied": "Copied!",
     "share.message": "I scored {score} points in PAH Block Puzzle! Can you beat me?",
+    "detail.mode": "Mode", "detail.difficulty": "Difficulty", "detail.hexes": "Hexes",
+    "detail.level": "Level", "detail.lines": "Lines cleared",
+    "gameOver.bestFor": "Best in {mode}",
   },
   ja: {
     subtitle: "多環芳香族ブロックパズル",
@@ -64,6 +67,9 @@ const TRANSLATIONS = {
     "paused.title": "一時停止中",
     "share.button": "シェア", "share.copyLink": "リンクをコピー", "share.copied": "コピーしました！",
     "share.message": "PAH Block Puzzleで{score}点を獲得しました！超えられるかな？",
+    "detail.mode": "モード", "detail.difficulty": "難易度", "detail.hexes": "六角形の向き",
+    "detail.level": "レベル", "detail.lines": "消したライン",
+    "gameOver.bestFor": "{mode}の自己ベスト",
   },
   zh: {
     subtitle: "多环芳香烃方块拼图",
@@ -97,6 +103,9 @@ const TRANSLATIONS = {
     "paused.title": "已暂停",
     "share.button": "分享", "share.copyLink": "复制链接", "share.copied": "已复制！",
     "share.message": "我在 PAH Block Puzzle 中获得了 {score} 分！你能超过我吗？",
+    "detail.mode": "模式", "detail.difficulty": "难度", "detail.hexes": "六边形方向",
+    "detail.level": "等级", "detail.lines": "消除行数",
+    "gameOver.bestFor": "{mode}最佳记录",
   },
   ko: {
     subtitle: "다환 방향족 블록 퍼즐",
@@ -130,6 +139,9 @@ const TRANSLATIONS = {
     "paused.title": "일시정지됨",
     "share.button": "공유", "share.copyLink": "링크 복사", "share.copied": "복사됨!",
     "share.message": "PAH Block Puzzle에서 {score}점을 획득했어요! 이길 수 있나요?",
+    "detail.mode": "모드", "detail.difficulty": "난이도", "detail.hexes": "육각형 방향",
+    "detail.level": "레벨", "detail.lines": "지운 줄",
+    "gameOver.bestFor": "{mode} 최고 점수",
   },
   de: {
     subtitle: "Polyzyklisches aromatisches Block-Puzzle",
@@ -163,6 +175,9 @@ const TRANSLATIONS = {
     "paused.title": "Pausiert",
     "share.button": "Teilen", "share.copyLink": "Link kopieren", "share.copied": "Kopiert!",
     "share.message": "Ich habe {score} Punkte bei PAH Block Puzzle erzielt! Kannst du mich schlagen?",
+    "detail.mode": "Modus", "detail.difficulty": "Schwierigkeit", "detail.hexes": "Sechsecke",
+    "detail.level": "Level", "detail.lines": "Gelöste Reihen",
+    "gameOver.bestFor": "Bestwert in {mode}",
   },
   fr: {
     subtitle: "Puzzle de blocs aromatiques polycycliques",
@@ -196,6 +211,9 @@ const TRANSLATIONS = {
     "paused.title": "En pause",
     "share.button": "Partager", "share.copyLink": "Copier le lien", "share.copied": "Copié !",
     "share.message": "J'ai obtenu {score} points sur PAH Block Puzzle ! Peux-tu me battre ?",
+    "detail.mode": "Mode", "detail.difficulty": "Difficulté", "detail.hexes": "Hexagones",
+    "detail.level": "Niveau", "detail.lines": "Lignes effacées",
+    "gameOver.bestFor": "Meilleur en {mode}",
   },
 };
 

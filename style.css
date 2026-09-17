@@ -73,6 +73,13 @@ h1 .subtitle {
   gap: 10px;
 }
 
+#scores.hidden { display: none; }
+
+#best-mode-tag {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .score-box {
   background: var(--paper);
   border-radius: 10px;
@@ -271,6 +278,14 @@ h1 .subtitle {
   line-height: 1.4;
 }
 
+.home-card p.home-card-best {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 1;
+}
+
 #difficulty-screen, #orientation-screen {
   display: flex;
   flex-direction: column;
@@ -450,6 +465,20 @@ button:active { transform: scale(0.95); }
   font-weight: 800;
   color: var(--accent);
   margin: 4px 0 12px;
+}
+
+#run-summary {
+  font-size: 0.78rem;
+  opacity: 0.7;
+  margin: 0 0 6px;
+  max-width: 260px;
+  line-height: 1.5;
+}
+
+#game-over-best {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 8px;
 }
 
 #new-best {

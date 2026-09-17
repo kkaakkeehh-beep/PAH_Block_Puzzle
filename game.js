@@ -59,7 +59,13 @@
   const nextCanvas = document.getElementById('next-canvas');
   const nextCtx = nextCanvas.getContext('2d');
   const scoreEl = document.getElementById('score');
+  const scoresEl = document.getElementById('scores');
   const bestScoreEl = document.getElementById('best-score');
+  const bestModeTag = document.getElementById('best-mode-tag');
+  const homeFallBest = document.getElementById('home-fall-best');
+  const homePlaceBest = document.getElementById('home-place-best');
+  const runSummaryEl = document.getElementById('run-summary');
+  const gameOverBestEl = document.getElementById('game-over-best');
   const levelEl = document.getElementById('level');
   const levelBox = document.getElementById('level-box');
   const currentLabelEl = document.getElementById('current-label');
@@ -95,6 +101,12 @@
   let pendingMode = null;
   let mode = 'fall';
   let fallOrientation = 'flat';
+  let difficultyKey = 'normal';
+  // Captured when a round starts. updateHud() writes the running score to
+  // storage as soon as it passes the old best, so by the time endGame() runs
+  // the stored best always equals the score -- comparing against it would
+  // never detect a new record.
+  let bestAtStart = 0;
   let board = new Map(); // axialKey -> color
   let score = 0, level = 1, linesCleared = 0;
   let gameOver = false;
@@ -124,9 +136,37 @@
     return shape.rotationStates[rotationIndex].map(([dq, dr]) => [anchorQ + dq, anchorR + dr]);
   }
 
+  function modeName(forMode) {
+    return t(forMode === 'fall' ? 'home.fallingTitle' : 'home.placingTitle');
+  }
+
+  // Each mode keeps its own best, so the home cards show both side by side
+  // instead of collapsing them into one number.
+  function refreshHomeBests() {
+    homeFallBest.textContent = getStoredBest('fall');
+    homePlaceBest.textContent = getStoredBest('place');
+  }
+
+  // The settings a round was actually played with -- shown on the Game Over
+  // card and included in the share text, so a score always carries the
+  // context that makes it comparable.
+  function runDetailParts() {
+    const parts = [
+      t('detail.mode') + ': ' + modeName(mode),
+      t('detail.difficulty') + ': ' + t('difficulty.' + difficultyKey + 'Title'),
+    ];
+    if (mode === 'fall') {
+      parts.push(t('detail.hexes') + ': ' + t(fallOrientation === 'flat' ? 'orientation.flatTitle' : 'orientation.pointyTitle'));
+      parts.push(t('detail.level') + ': ' + level);
+    }
+    parts.push(t('detail.lines') + ': ' + linesCleared);
+    return parts;
+  }
+
   function updateHud() {
     scoreEl.textContent = score;
     levelEl.textContent = level;
+    bestModeTag.textContent = ' · ' + modeName(mode);
     const stored = getStoredBest(mode);
     const best = Math.max(stored, score);
     if (best > stored) localStorage.setItem(HIGH_SCORE_KEYS[mode], String(best));
@@ -161,14 +201,16 @@
   function endGame() {
     gameOver = true;
     running = false;
-    const best = getStoredBest(mode);
-    if (score > best) {
+    if (score > bestAtStart) {
       localStorage.setItem(HIGH_SCORE_KEYS[mode], String(score));
       newBestEl.classList.remove('hidden');
     } else {
       newBestEl.classList.add('hidden');
     }
     finalScoreEl.textContent = score;
+    runSummaryEl.textContent = runDetailParts().join(' · ');
+    gameOverBestEl.textContent =
+      t('gameOver.bestFor').replace('{mode}', modeName(mode)) + ': ' + getStoredBest(mode);
     updateHud();
     setupShareButtons();
     overlay.classList.remove('hidden');
@@ -179,7 +221,7 @@
   // like the generic "Copy link" fallback -- X and LINE both have real
   // share-intent URLs, so those are plain links.
   function setupShareButtons() {
-    const text = t('share.message').replace('{score}', score);
+    const text = t('share.message').replace('{score}', score) + '\n' + runDetailParts().join(' / ');
     const url = location.href;
     shareCopiedNote.classList.add('hidden');
 
@@ -529,6 +571,7 @@
   }
 
   function hideAllPreGameScreens() {
+    scoresEl.classList.add('hidden');
     homeScreen.classList.add('hidden');
     orientationScreen.classList.add('hidden');
     difficultyScreen.classList.add('hidden');
@@ -548,10 +591,12 @@
     difficultyScreen.classList.remove('hidden');
   }
 
-  function enterGame(desiredMode, difficultyFactor) {
+  function enterGame(desiredMode, difficultyFactor, chosenDifficultyKey) {
     setDifficultyFactor(difficultyFactor);
+    difficultyKey = chosenDifficultyKey || 'normal';
     screen = 'game';
     hideAllPreGameScreens();
+    scoresEl.classList.remove('hidden');
     gameScreen.classList.remove('hidden');
     setMode(desiredMode, true);
   }
@@ -566,7 +611,7 @@
     homeScreen.classList.remove('hidden');
     overlay.classList.add('hidden');
     pausedOverlay.classList.add('hidden');
-    bestScoreEl.textContent = Math.max(getStoredBest('fall'), getStoredBest('place'));
+    refreshHomeBests();
   }
 
   function setPaused(value) {
@@ -577,6 +622,7 @@
   }
 
   function resetGame() {
+    bestAtStart = getStoredBest(mode);
     board = new Map();
     score = 0;
     level = 1;
@@ -790,7 +836,7 @@
       }
     });
     difficultyCards.forEach(card => {
-      card.addEventListener('click', () => enterGame(pendingMode, Number(card.dataset.factor)));
+      card.addEventListener('click', () => enterGame(pendingMode, Number(card.dataset.factor), card.dataset.difficulty));
     });
 
     window.addEventListener('resize', () => computeBoardLayout(boardCanvas));
@@ -814,6 +860,6 @@
   setBoardSize(FALL_COLS, FALL_ROWS);
   computeBoardLayout(boardCanvas);
   bindControls();
-  bestScoreEl.textContent = Math.max(getStoredBest('fall'), getStoredBest('place'));
+  refreshHomeBests();
   requestAnimationFrame(tick);
 })();
