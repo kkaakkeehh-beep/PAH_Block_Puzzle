@@ -32,7 +32,12 @@
   const LINES_PER_LEVEL = 8;
   const TIME_SPEEDUP_INTERVAL_MS = 20000;
   const DROP_MS_PER_LEVEL = 50;
-  const HIGH_SCORE_KEY = 'pahBlockPuzzleHighScore';
+  const LEGACY_HIGH_SCORE_KEY = 'pahBlockPuzzleHighScore';
+  const HIGH_SCORE_KEYS = { fall: 'pahBlockPuzzleHighScore_fall', place: 'pahBlockPuzzleHighScore_place' };
+
+  function getStoredBest(forMode) {
+    return Number(localStorage.getItem(HIGH_SCORE_KEYS[forMode]) || 0);
+  }
   const TRAY_SIZE = 3;
 
   // Level (shown in the HUD) climbs from lines cleared OR just from time
@@ -116,9 +121,9 @@
   function updateHud() {
     scoreEl.textContent = score;
     levelEl.textContent = level;
-    const stored = Number(localStorage.getItem(HIGH_SCORE_KEY) || 0);
+    const stored = getStoredBest(mode);
     const best = Math.max(stored, score);
-    if (best > stored) localStorage.setItem(HIGH_SCORE_KEY, String(best));
+    if (best > stored) localStorage.setItem(HIGH_SCORE_KEYS[mode], String(best));
     bestScoreEl.textContent = best;
     if (mode === 'fall') {
       currentLabelEl.textContent = current ? `${current.shape.name} (${current.shape.formula})` : '';
@@ -150,9 +155,9 @@
   function endGame() {
     gameOver = true;
     running = false;
-    const best = Number(localStorage.getItem(HIGH_SCORE_KEY) || 0);
+    const best = getStoredBest(mode);
     if (score > best) {
-      localStorage.setItem(HIGH_SCORE_KEY, String(score));
+      localStorage.setItem(HIGH_SCORE_KEYS[mode], String(score));
       newBestEl.classList.remove('hidden');
     } else {
       newBestEl.classList.add('hidden');
@@ -420,6 +425,7 @@
     homeScreen.classList.remove('hidden');
     overlay.classList.add('hidden');
     pausedOverlay.classList.add('hidden');
+    bestScoreEl.textContent = Math.max(getStoredBest('fall'), getStoredBest('place'));
   }
 
   function setPaused(value) {
@@ -650,11 +656,22 @@
     bindBoardPointerForPlacing();
   }
 
+  // One-time migration: seed both per-mode bests from the old shared one so
+  // nobody's existing high score just disappears.
+  (function migrateLegacyHighScore() {
+    const legacy = localStorage.getItem(LEGACY_HIGH_SCORE_KEY);
+    if (legacy === null) return;
+    for (const key of Object.values(HIGH_SCORE_KEYS)) {
+      if (localStorage.getItem(key) === null) localStorage.setItem(key, legacy);
+    }
+    localStorage.removeItem(LEGACY_HIGH_SCORE_KEY);
+  })();
+
   buildPlacePanel();
   setOrientation(fallOrientation);
   setBoardSize(FALL_COLS, FALL_ROWS);
   computeBoardLayout(boardCanvas);
   bindControls();
-  bestScoreEl.textContent = Number(localStorage.getItem(HIGH_SCORE_KEY) || 0);
+  bestScoreEl.textContent = Math.max(getStoredBest('fall'), getStoredBest('place'));
   requestAnimationFrame(tick);
 })();
