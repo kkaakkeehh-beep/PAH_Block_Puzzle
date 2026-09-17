@@ -67,6 +67,12 @@
   const overlay = document.getElementById('game-over-overlay');
   const finalScoreEl = document.getElementById('final-score');
   const newBestEl = document.getElementById('new-best');
+  const shareNativeBtn = document.getElementById('share-native-btn');
+  const shareXBtn = document.getElementById('share-x-btn');
+  const shareInstagramBtn = document.getElementById('share-instagram-btn');
+  const shareLineBtn = document.getElementById('share-line-btn');
+  const shareCopyBtn = document.getElementById('share-copy-btn');
+  const shareCopiedNote = document.getElementById('share-copied-note');
   const fallPanel = document.getElementById('fall-panel');
   const placePanel = document.getElementById('place-panel');
   const touchControls = document.getElementById('touch-controls');
@@ -164,7 +170,37 @@
     }
     finalScoreEl.textContent = score;
     updateHud();
+    setupShareButtons();
     overlay.classList.remove('hidden');
+  }
+
+  // Instagram has no web share-intent URL for arbitrary posts (only its own
+  // app can post to Stories/feed), so its button just copies the message
+  // like the generic "Copy link" fallback -- X and LINE both have real
+  // share-intent URLs, so those are plain links.
+  function setupShareButtons() {
+    const text = t('share.message').replace('{score}', score);
+    const url = location.href;
+    shareCopiedNote.classList.add('hidden');
+
+    shareXBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url);
+    shareLineBtn.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text);
+
+    if (navigator.share) {
+      shareNativeBtn.classList.remove('hidden');
+      shareNativeBtn.onclick = () => navigator.share({ text, url }).catch(() => {});
+    } else {
+      shareNativeBtn.classList.add('hidden');
+    }
+
+    const copyToClipboard = () => {
+      if (!navigator.clipboard || !navigator.clipboard.writeText) return;
+      navigator.clipboard.writeText(text + ' ' + url)
+        .then(() => shareCopiedNote.classList.remove('hidden'))
+        .catch(() => {});
+    };
+    shareCopyBtn.onclick = copyToClipboard;
+    shareInstagramBtn.onclick = copyToClipboard;
   }
 
   // ---------- fall mode ----------

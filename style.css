@@ -459,6 +459,46 @@ button:active { transform: scale(0.95); }
 
 #new-best.hidden { display: none; }
 
+#share-native-btn {
+  display: block;
+  margin: 4px auto 12px;
+  min-width: 140px;
+}
+
+#share-native-btn.hidden { display: none; }
+
+#share-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  color: #fff;
+  text-decoration: none;
+}
+
+.share-x { background: #000; }
+.share-instagram { background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4); }
+.share-line { background: #06c755; }
+.share-copy { background: var(--accent); }
+
+#share-copied-note {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 0 0 12px;
+}
+
+#share-copied-note.hidden { display: none; }
+
 @media (max-width: 480px) {
   #side-panel {
     flex-direction: row;

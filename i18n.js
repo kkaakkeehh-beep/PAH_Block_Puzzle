@@ -29,6 +29,8 @@ const TRANSLATIONS = {
     "controls.softDrop": "Soft drop", "controls.hardDrop": "Hard drop",
     "gameOver.title": "Game Over", "gameOver.finalScore": "Final score", "gameOver.newBest": "New best score!",
     "paused.title": "Paused",
+    "share.button": "Share", "share.copyLink": "Copy link", "share.copied": "Copied!",
+    "share.message": "I scored {score} points in PAH Block Puzzle! Can you beat me?",
   },
   ja: {
     subtitle: "多環芳香族ブロックパズル",
@@ -60,6 +62,8 @@ const TRANSLATIONS = {
     "controls.softDrop": "ソフトドロップ", "controls.hardDrop": "ハードドロップ",
     "gameOver.title": "ゲームオーバー", "gameOver.finalScore": "最終スコア", "gameOver.newBest": "自己ベスト更新！",
     "paused.title": "一時停止中",
+    "share.button": "シェア", "share.copyLink": "リンクをコピー", "share.copied": "コピーしました！",
+    "share.message": "PAH Block Puzzleで{score}点を獲得しました！超えられるかな？",
   },
   zh: {
     subtitle: "多环芳香烃方块拼图",
@@ -91,6 +95,8 @@ const TRANSLATIONS = {
     "controls.softDrop": "软降", "controls.hardDrop": "硬降",
     "gameOver.title": "游戏结束", "gameOver.finalScore": "最终分数", "gameOver.newBest": "刷新最佳记录！",
     "paused.title": "已暂停",
+    "share.button": "分享", "share.copyLink": "复制链接", "share.copied": "已复制！",
+    "share.message": "我在 PAH Block Puzzle 中获得了 {score} 分！你能超过我吗？",
   },
   ko: {
     subtitle: "다환 방향족 블록 퍼즐",
@@ -122,6 +128,8 @@ const TRANSLATIONS = {
     "controls.softDrop": "소프트 드롭", "controls.hardDrop": "하드 드롭",
     "gameOver.title": "게임 오버", "gameOver.finalScore": "최종 점수", "gameOver.newBest": "최고 기록 경신!",
     "paused.title": "일시정지됨",
+    "share.button": "공유", "share.copyLink": "링크 복사", "share.copied": "복사됨!",
+    "share.message": "PAH Block Puzzle에서 {score}점을 획득했어요! 이길 수 있나요?",
   },
   de: {
     subtitle: "Polyzyklisches aromatisches Block-Puzzle",
@@ -153,6 +161,8 @@ const TRANSLATIONS = {
     "controls.softDrop": "Sanft fallen", "controls.hardDrop": "Hart fallen",
     "gameOver.title": "Spiel vorbei", "gameOver.finalScore": "Endpunktzahl", "gameOver.newBest": "Neuer Bestwert!",
     "paused.title": "Pausiert",
+    "share.button": "Teilen", "share.copyLink": "Link kopieren", "share.copied": "Kopiert!",
+    "share.message": "Ich habe {score} Punkte bei PAH Block Puzzle erzielt! Kannst du mich schlagen?",
   },
   fr: {
     subtitle: "Puzzle de blocs aromatiques polycycliques",
@@ -184,6 +194,8 @@ const TRANSLATIONS = {
     "controls.softDrop": "Descente douce", "controls.hardDrop": "Chute rapide",
     "gameOver.title": "Partie terminée", "gameOver.finalScore": "Score final", "gameOver.newBest": "Nouveau meilleur score !",
     "paused.title": "En pause",
+    "share.button": "Partager", "share.copyLink": "Copier le lien", "share.copied": "Copié !",
+    "share.message": "J'ai obtenu {score} points sur PAH Block Puzzle ! Peux-tu me battre ?",
   },
 };
 
