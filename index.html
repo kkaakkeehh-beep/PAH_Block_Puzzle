@@ -28,7 +28,7 @@
      against a stale cached game.js -- which renders new markup with no
      event listeners bound to it. Bump ASSET_VERSION on every deploy that
      touches style.css or any of the scripts. -->
-<link rel="stylesheet" href="style.css?v=20260917h">
+<link rel="stylesheet" href="style.css?v=20260917i">
 </head>
 <body>
 <div id="app">
@@ -220,6 +220,11 @@
       </div>
       <aside id="side-panel">
         <div id="fall-panel">
+          <button id="hold-block" class="panel-block">
+            <h2 data-i18n="game.hold">Hold</h2>
+            <canvas id="hold-canvas"></canvas>
+            <div id="hold-label" class="molecule-label"></div>
+          </button>
           <div class="panel-block">
             <h2 data-i18n="game.next">Next</h2>
             <canvas id="next-canvas"></canvas>
@@ -233,14 +238,16 @@
         <div id="place-panel" class="hidden"></div>
         <button id="new-game-btn" data-i18n="game.newGame">New Game</button>
       </aside>
-    </div>
 
-    <div id="touch-controls">
-      <button id="btn-left" data-i18n-aria="controls.left" aria-label="Left">◀</button>
-      <button id="btn-rotate" data-i18n-aria="controls.rotate" aria-label="Rotate">↻</button>
-      <button id="btn-right" data-i18n-aria="controls.right" aria-label="Right">▶</button>
-      <button id="btn-down" data-i18n-aria="controls.softDrop" aria-label="Soft drop">▼</button>
-      <button id="btn-drop" data-i18n-aria="controls.hardDrop" aria-label="Hard drop">⤓</button>
+      <!-- Inside the play area so that on a phone CSS order can put it
+           directly under the board, above the Hold/Next panel. -->
+      <div id="touch-controls">
+        <button id="btn-left" data-i18n-aria="controls.left" aria-label="Left">◀</button>
+        <button id="btn-rotate" data-i18n-aria="controls.rotate" aria-label="Rotate">↻</button>
+        <button id="btn-right" data-i18n-aria="controls.right" aria-label="Right">▶</button>
+        <button id="btn-down" data-i18n-aria="controls.softDrop" aria-label="Soft drop">▼</button>
+        <button id="btn-drop" data-i18n-aria="controls.hardDrop" aria-label="Hard drop">⤓</button>
+      </div>
     </div>
   </div>
 
@@ -275,10 +282,10 @@
   </div>
 </div>
 
-<script src="i18n.js?v=20260917h"></script>
-<script src="hexmath.js?v=20260917h"></script>
-<script src="pieces.js?v=20260917h"></script>
-<script src="board.js?v=20260917h"></script>
-<script src="game.js?v=20260917h"></script>
+<script src="i18n.js?v=20260917i"></script>
+<script src="hexmath.js?v=20260917i"></script>
+<script src="pieces.js?v=20260917i"></script>
+<script src="board.js?v=20260917i"></script>
+<script src="game.js?v=20260917i"></script>
 </body>
 </html>

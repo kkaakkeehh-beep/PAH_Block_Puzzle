@@ -156,6 +156,27 @@ h1 .subtitle {
   margin: 0 auto;
 }
 
+/* A button so it is tappable and focusable, but it has to opt out of the
+   global button styling to sit in the panel like the other blocks. */
+#hold-block {
+  background: none;
+  color: var(--ink);
+  font-weight: 400;
+  border: 1px dashed rgba(127, 133, 140, 0.45);
+  border-radius: 10px;
+  padding: 6px 4px;
+  width: 100%;
+  display: block;
+  text-align: center;
+}
+
+#hold-block:hover { background: rgba(127, 133, 140, 0.1); }
+
+#hold-canvas {
+  display: block;
+  margin: 0 auto;
+}
+
 .molecule-label {
   text-align: center;
   font-size: 0.78rem;
@@ -488,6 +509,7 @@ button:active { transform: scale(0.95); }
   display: flex;
   gap: 8px;
   justify-content: center;
+  flex: 1 1 100%;
 }
 
 #touch-controls button {
@@ -609,10 +631,40 @@ button:active { transform: scale(0.95); }
 @media (max-width: 480px) {
   #side-panel {
     flex-direction: row;
+    flex-wrap: wrap;
     width: 100%;
     flex: 1 1 100%;
     justify-content: space-around;
     align-items: center;
   }
   .panel-block { text-align: center; }
+
+  /* Hold and Next sit side by side below the board rather than stacking,
+     which would push the touch controls off the bottom of the screen. */
+  #fall-panel {
+    flex: 1 1 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 8px 14px;
+  }
+
+  #hold-block {
+    width: auto;
+    min-width: 88px;
+    align-self: flex-start;
+  }
+
+  #fall-panel .molecule-label { font-size: 0.68rem; }
+  #fall-panel .panel-block h2 { margin-bottom: 2px; }
+
+  #new-game-btn { flex: 0 0 auto; }
+
+  /* Controls first, reference panel second: the buttons are what you reach
+     for constantly, so they should not be pushed below the fold by Hold
+     and Next. */
+  .board-wrap { order: 0; }
+  #touch-controls { order: 1; }
+  #side-panel { order: 2; }
 }

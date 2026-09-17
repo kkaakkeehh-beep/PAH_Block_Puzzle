@@ -30,6 +30,7 @@
   const BASE_DROP_MS = 800;
   const MIN_DROP_MS = 120;
   const LINES_PER_LEVEL = 8;
+  const NEXT_COUNT = 3;
   const TIME_SPEEDUP_INTERVAL_MS = 20000;
   const DROP_MS_PER_LEVEL = 50;
   const LEGACY_HIGH_SCORE_KEY = 'pahBlockPuzzleHighScore';
@@ -58,6 +59,10 @@
   const boardCtx = boardCanvas.getContext('2d');
   const nextCanvas = document.getElementById('next-canvas');
   const nextCtx = nextCanvas.getContext('2d');
+  const holdCanvas = document.getElementById('hold-canvas');
+  const holdCtx = holdCanvas.getContext('2d');
+  const holdLabelEl = document.getElementById('hold-label');
+  const holdBlock = document.getElementById('hold-block');
   const scoreEl = document.getElementById('score');
   const scoresEl = document.getElementById('scores');
   const bestScoreEl = document.getElementById('best-score');
@@ -124,7 +129,13 @@
   let pendingClearCallback = null;
 
   // fall-mode state
-  let current, next;
+  let current;
+  let nextQueue = [];
+  // The piece parked in Hold, and whether Hold has already been used for the
+  // piece currently falling. Without that second flag you could swap back and
+  // forth forever and never have to commit to a placement.
+  let held = null;
+  let holdUsed = false;
   let dropIntervalMs = BASE_DROP_MS;
   let dropAccumulator = 0;
   let elapsedMs = 0;
@@ -177,7 +188,9 @@
     bestScoreEl.textContent = best;
     if (mode === 'fall') {
       currentLabelEl.textContent = current ? `${current.shape.name} (${current.shape.formula})` : '';
-      nextLabelEl.textContent = next ? `${next.shape.name} (${next.shape.formula})` : '';
+      const upcoming = nextQueue[0];
+      nextLabelEl.textContent = upcoming ? `${upcoming.shape.name} (${upcoming.shape.formula})` : '';
+      holdLabelEl.textContent = held ? `${held.shape.name} (${held.shape.formula})` : '';
     }
   }
 
@@ -307,12 +320,30 @@
     updateHud();
 
     applyLineClears(() => {
-      current = next;
-      [current.anchorQ, current.anchorR] = spawnAxial(current.shape);
-      next = spawnPiece();
+      current = newFallingPiece(takeFromQueue());
+      holdUsed = false;
       updateHud();
       if (!canPlaceCells(board, fallCells(current))) endGame();
     });
+  }
+
+  function takeFromQueue() {
+    const piece = nextQueue.shift();
+    nextQueue.push(spawnPiece());
+    return piece;
+  }
+
+  // Parks the falling piece and brings out whatever was parked before, or the
+  // next one from the queue on the first use. The swapped-in piece re-enters
+  // at the spawn position in its default rotation, like a fresh piece.
+  function holdPiece() {
+    if (mode !== 'fall' || !running || paused || gameOver || !current || holdUsed || flashTimer > 0) return;
+    const incoming = held;
+    held = { shape: current.shape, rotationIndex: 0 };
+    current = newFallingPiece(incoming || takeFromQueue());
+    holdUsed = true;
+    updateHud();
+    if (!canPlaceCells(board, fallCells(current))) endGame();
   }
 
   // ---------- place mode ----------
@@ -626,6 +657,7 @@
         [t('controls.rotate'), '↑  /  R'],
         [t('controls.softDrop'), '↓'],
         [t('controls.hardDrop'), 'Space  ·  ↓↓'],
+        [t('game.hold'), 'C  /  Shift'],
         [t('game.pause'), 'P'],
       ]);
       helpRightTitle.textContent = t('howto.touch');
@@ -634,6 +666,7 @@
         [t('controls.rotate'), t('howto.swipe') + ' ↑  ·  ↻'],
         [t('controls.softDrop'), '▼'],
         [t('controls.hardDrop'), t('howto.swipe') + ' ↓  ·  ⤓  ·  ' + t('howto.doubleTap') + ' ▼'],
+        [t('game.hold'), t('howto.holdTap')],
       ]);
     } else {
       helpLeftTitle.textContent = t('howto.mouse');
@@ -706,8 +739,11 @@
       dropAccumulator = 0;
       elapsedMs = 0;
       lastFrameTime = null;
-      current = newFallingPiece(spawnPiece());
-      next = spawnPiece();
+      held = null;
+      holdUsed = false;
+      nextQueue = [];
+      for (let i = 0; i < NEXT_COUNT; i++) nextQueue.push(spawnPiece());
+      current = newFallingPiece(takeFromQueue());
     } else {
       tray = [null, null, null];
       refillTrayIfEmpty();
@@ -764,6 +800,7 @@
         drawDoubleBonds(boardCtx, cx, cy, hexSize * 0.94, currentBonds[i], 'rgba(255,255,255,0.85)');
       });
       renderNextPreview();
+      renderHoldPreview();
     }
 
     if (mode === 'place' && running && selectedSlot >= 0 && hoverAxial) {
@@ -780,31 +817,68 @@
     }
   }
 
-  function renderNextPreview() {
+  function sizeCanvas(canvas, ctx, cssW, cssH) {
     const dpr = window.devicePixelRatio || 1;
-    const cssSize = 110;
-    nextCanvas.width = cssSize * dpr;
-    nextCanvas.height = cssSize * dpr;
-    nextCanvas.style.width = cssSize + 'px';
-    nextCanvas.style.height = cssSize + 'px';
-    nextCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    nextCtx.clearRect(0, 0, cssSize, cssSize);
-    if (!next) return;
-    const offsets = next.shape.rotationStates[0];
-    const size = 16;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+  }
+
+  // Draws a molecule centred inside the box (boxX, boxY, boxW, boxH).
+  function drawMoleculeIn(ctx, shape, size, boxX, boxY, boxW, boxH, alpha) {
+    const pts = shape.rotationStates[0].map(([q, r]) => axialToPixel(q, r, size));
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    const pts = offsets.map(([q, r]) => axialToPixel(q, r, size));
     for (const [x, y] of pts) {
       minX = Math.min(minX, x - size); maxX = Math.max(maxX, x + size);
       minY = Math.min(minY, y - size); maxY = Math.max(maxY, y + size);
     }
-    const cx0 = (cssSize - (maxX - minX)) / 2 - minX;
-    const cy0 = (cssSize - (maxY - minY)) / 2 - minY;
-    const bonds = kekuleBondsForPiece(next.shape, 0);
+    const ox = boxX + (boxW - (maxX - minX)) / 2 - minX;
+    const oy = boxY + (boxH - (maxY - minY)) / 2 - minY;
+    const bonds = kekuleBondsForPiece(shape, 0);
+    ctx.save();
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
     pts.forEach(([x, y], i) => {
-      drawHex(nextCtx, x + cx0, y + cy0, size * 0.92, next.shape.color, '#1d2126', 1.5);
-      drawDoubleBonds(nextCtx, x + cx0, y + cy0, size * 0.92, bonds[i], 'rgba(255,255,255,0.85)');
+      drawHex(ctx, x + ox, y + oy, size * 0.92, shape.color, '#1d2126', 1.5);
+      drawDoubleBonds(ctx, x + ox, y + oy, size * 0.92, bonds[i], 'rgba(255,255,255,0.85)');
     });
+    ctx.restore();
+  }
+
+  // Narrow screens put the panel between the board and the touch controls,
+  // so the previews lay out in a wide strip there instead of a tall stack --
+  // a tall one pushes the controls well below the fold.
+  function isNarrow() {
+    return window.innerWidth <= 480;
+  }
+
+  // The whole queue, with the piece you get next drawn largest.
+  function renderNextPreview() {
+    const narrow = isNarrow();
+    const cssW = narrow ? 168 : 110;
+    const cssH = narrow ? 54 : 150;
+    sizeCanvas(nextCanvas, nextCtx, cssW, cssH);
+    const boxes = narrow
+      ? [[0, 0, 72, cssH, 11], [72, 0, 48, cssH, 8], [120, 0, 48, cssH, 8]]
+      : [[0, 0, cssW, 74, 15], [0, 74, cssW / 2, 38, 9], [cssW / 2, 74, cssW / 2, 38, 9]];
+    nextQueue.slice(0, NEXT_COUNT).forEach((piece, i) => {
+      if (!piece || !boxes[i]) return;
+      const [bx, by, bw, bh, size] = boxes[i];
+      drawMoleculeIn(nextCtx, piece.shape, size, bx, by, bw, bh, i === 0 ? 1 : 0.65);
+    });
+  }
+
+  function renderHoldPreview() {
+    const narrow = isNarrow();
+    const cssW = narrow ? 76 : 110;
+    const cssH = narrow ? 54 : 62;
+    sizeCanvas(holdCanvas, holdCtx, cssW, cssH);
+    if (!held) return;
+    // Dimmed once Hold is spent, so it's clear it can't be used again until
+    // the current piece lands.
+    drawMoleculeIn(holdCtx, held.shape, narrow ? 10 : 13, 0, 0, cssW, cssH, holdUsed ? 0.35 : 1);
   }
 
   function tick(timestamp) {
@@ -884,6 +958,7 @@
         case 'ArrowDown': pressDown(e.repeat); e.preventDefault(); break;
         case 'ArrowUp': case 'r': case 'R': tryRotate(); e.preventDefault(); break;
         case ' ': hardDrop(); e.preventDefault(); break;
+        case 'c': case 'C': case 'Shift': holdPiece(); e.preventDefault(); break;
       }
     });
 
@@ -901,6 +976,7 @@
       const el = document.getElementById(id);
       if (el) el.addEventListener('click', fn);
     };
+    holdBlock.addEventListener('click', holdPiece);
     onClick('new-game-btn', resetGame);
     onClick('restart-btn', resetGame);
     onClick('game-over-home-btn', goHome);
