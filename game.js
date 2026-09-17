@@ -53,8 +53,10 @@
   function updateHud() {
     scoreEl.textContent = score;
     levelEl.textContent = level;
-    const best = Number(localStorage.getItem(HIGH_SCORE_KEY) || 0);
-    bestScoreEl.textContent = Math.max(best, score);
+    const stored = Number(localStorage.getItem(HIGH_SCORE_KEY) || 0);
+    const best = Math.max(stored, score);
+    if (best > stored) localStorage.setItem(HIGH_SCORE_KEY, String(best));
+    bestScoreEl.textContent = best;
     if (mode === 'fall') {
       currentLabelEl.textContent = current ? `${current.shape.name} (${current.shape.formula})` : '';
       nextLabelEl.textContent = next ? `${next.shape.name} (${next.shape.formula})` : '';

@@ -132,10 +132,10 @@ function drawLockedCells(ctx, board, flashRowSet, flashOn) {
   }
 }
 
-// Inverse of axialToPixel + cube rounding, for pointer-based placement.
+// Inverse of axialToPixel (flat-top) + cube rounding, for pointer placement.
 function pixelToAxial(px, py, size) {
-  const r = py / (1.5 * size);
-  const q = px / (SQRT3 * size) - r / 2;
+  const q = px / (1.5 * size);
+  const r = py / (SQRT3 * size) - q / 2;
   let rx = q, rz = r, ry = -q - r;
   let ix = Math.round(rx), iy = Math.round(ry), iz = Math.round(rz);
   const dx = Math.abs(ix - rx), dy = Math.abs(iy - ry), dz = Math.abs(iz - rz);
