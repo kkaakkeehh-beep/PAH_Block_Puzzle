@@ -463,9 +463,31 @@
 
   // ---------- rendering ----------
 
+  // Marks the boundary between SPAWN_ROW-1 and SPAWN_ROW: stack up to (or
+  // past) it in the spawn columns and the next piece won't fit.
+  function drawDeadline(ctx) {
+    const col = Math.floor(NUM_COLS / 2);
+    const [, yAbove] = cellCenter(col, SPAWN_ROW - 1);
+    const [, yAt] = cellCenter(col, SPAWN_ROW);
+    const lineY = (yAbove + yAt) / 2;
+    const [x0] = cellCenter(0, SPAWN_ROW);
+    const [x1] = cellCenter(NUM_COLS - 1, SPAWN_ROW);
+    const pad = hexSize * 1.2;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(214, 40, 40, 0.75)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 5]);
+    ctx.beginPath();
+    ctx.moveTo(x0 - pad, lineY);
+    ctx.lineTo(x1 + pad, lineY);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function render() {
     boardCtx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
     drawBoardGrid(boardCtx);
+    if (mode === 'fall') drawDeadline(boardCtx);
 
     const flashSet = new Set(flashRows);
     const blinkOn = flashTimer > 0 && Math.floor((CLEAR_FLASH_MS - flashTimer) / BLINK_INTERVAL_MS) % 2 === 0;
