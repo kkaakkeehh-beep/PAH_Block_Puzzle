@@ -217,6 +217,15 @@ h1 .subtitle {
   color: var(--accent);
 }
 
+.difficulty-card .home-card-icon {
+  font-size: 1.6rem;
+}
+
+.icon-pointy-hex {
+  display: inline-block;
+  transform: rotate(30deg);
+}
+
 .home-card h2 {
   margin: 0;
   font-size: 1.1rem;
@@ -229,7 +238,7 @@ h1 .subtitle {
   line-height: 1.4;
 }
 
-#difficulty-screen {
+#difficulty-screen, #orientation-screen {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -237,7 +246,7 @@ h1 .subtitle {
   align-items: center;
 }
 
-#difficulty-screen.hidden { display: none; }
+#difficulty-screen.hidden, #orientation-screen.hidden { display: none; }
 
 .difficulty-cards {
   display: flex;
@@ -293,19 +302,6 @@ h1 .subtitle {
   opacity: 1;
 }
 
-#orientation-toggle {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-top: -4px;
-}
-
-#orientation-toggle .mode-btn {
-  font-size: 0.75rem;
-  padding: 5px 8px;
-}
-
-#orientation-toggle.hidden { display: none; }
 
 .mode-btn {
   background: var(--paper);

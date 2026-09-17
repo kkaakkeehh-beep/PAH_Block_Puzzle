@@ -33,6 +33,23 @@
     </div>
   </div>
 
+  <div id="orientation-screen" class="hidden">
+    <p class="home-tagline">Which way should the hexagons point?</p>
+    <div class="difficulty-cards">
+      <button class="difficulty-card" data-orientation="flat">
+        <span class="home-card-icon">⬡</span>
+        <h2>Flat-top</h2>
+        <p>Falls in a perfectly straight column; side-to-side moves drift slightly.</p>
+      </button>
+      <button class="difficulty-card" data-orientation="pointy">
+        <span class="home-card-icon icon-pointy-hex">⬡</span>
+        <h2>Pointy-top</h2>
+        <p>Side-to-side moves are perfectly straight; the fall drifts slightly.</p>
+      </button>
+    </div>
+    <button id="orientation-back-btn" class="text-back-btn">← Back</button>
+  </div>
+
   <div id="difficulty-screen" class="hidden">
     <p class="home-tagline">How complex should the molecules get?</p>
     <div class="difficulty-cards">
@@ -60,11 +77,6 @@
     <div id="mode-toggle" role="tablist">
       <button id="home-btn" aria-label="Home">🏠</button>
       <button id="pause-btn">Pause</button>
-    </div>
-
-    <div id="orientation-toggle" role="tablist">
-      <button id="orient-flat-btn" class="mode-btn active" role="tab">Flat-top</button>
-      <button id="orient-pointy-btn" class="mode-btn" role="tab">Pointy-top</button>
     </div>
 
     <div class="play-area">
