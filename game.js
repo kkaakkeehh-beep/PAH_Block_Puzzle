@@ -612,6 +612,7 @@
     overlay.classList.add('hidden');
     pausedOverlay.classList.add('hidden');
     refreshHomeBests();
+    window.scrollTo(0, 0);
   }
 
   function setPaused(value) {
@@ -804,9 +805,16 @@
     bind('btn-rotate', tryRotate);
     bind('btn-drop', hardDrop);
 
-    document.getElementById('new-game-btn').addEventListener('click', resetGame);
-    document.getElementById('restart-btn').addEventListener('click', resetGame);
-    document.getElementById('game-over-home-btn').addEventListener('click', goHome);
+    // Null-tolerant: a missing element (e.g. a browser holding a stale
+    // cached copy of one file but not the other) should cost that one
+    // button, not throw and leave every later binding unattached.
+    const onClick = (id, fn) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', fn);
+    };
+    onClick('new-game-btn', resetGame);
+    onClick('restart-btn', resetGame);
+    onClick('game-over-home-btn', goHome);
     pauseBtn.addEventListener('click', () => setPaused(!paused));
     resumeBtn.addEventListener('click', () => setPaused(false));
     homeFallBtn.addEventListener('click', () => showOrientationScreen('fall'));
