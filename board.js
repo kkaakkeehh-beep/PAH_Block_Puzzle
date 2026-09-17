@@ -1,5 +1,10 @@
-const NUM_COLS = 7;
-const NUM_ROWS = 14;
+let NUM_COLS = 7;
+let NUM_ROWS = 14;
+
+function setBoardSize(cols, rows) {
+  NUM_COLS = cols;
+  NUM_ROWS = rows;
+}
 
 let hexSize = 20;
 let originX = 0, originY = 0;

@@ -1,6 +1,8 @@
 (function () {
+  const FALL_COLS = 7, FALL_ROWS = 14;
+  const PLACE_COLS = 7, PLACE_ROWS = 9;
   const SPAWN_ROW = 2;
-  const [SPAWN_Q, SPAWN_R] = offsetToAxial(Math.floor(NUM_COLS / 2), SPAWN_ROW);
+  const [SPAWN_Q, SPAWN_R] = offsetToAxial(Math.floor(FALL_COLS / 2), SPAWN_ROW);
   const BASE_DROP_MS = 800;
   const MIN_DROP_MS = 120;
   const LINES_PER_LEVEL = 8;
@@ -321,6 +323,8 @@
     touchControls.classList.toggle('hidden', mode !== 'fall');
     levelBox.classList.toggle('hidden', mode !== 'fall');
     pauseBtn.classList.toggle('hidden', mode !== 'fall');
+    setBoardSize(mode === 'fall' ? FALL_COLS : PLACE_COLS, mode === 'fall' ? FALL_ROWS : PLACE_ROWS);
+    computeBoardLayout(boardCanvas);
     resetGame();
   }
 
@@ -495,6 +499,7 @@
   }
 
   buildPlacePanel();
+  setBoardSize(FALL_COLS, FALL_ROWS);
   computeBoardLayout(boardCanvas);
   bindControls();
   resetGame();
