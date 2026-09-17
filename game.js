@@ -415,6 +415,7 @@
     pendingMode = null;
     running = false;
     gameScreen.classList.add('hidden');
+    levelBox.classList.add('hidden');
     hideAllPreGameScreens();
     homeScreen.classList.remove('hidden');
     overlay.classList.add('hidden');
