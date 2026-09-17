@@ -787,6 +787,33 @@
     requestAnimationFrame(tick);
   }
 
+  // Pressing down steps the piece one row; pressing it twice quickly drops
+  // it the rest of the way. Shared by the on-screen button and the Down
+  // arrow key.
+  //
+  // The first press still soft-drops right away instead of waiting to see
+  // whether a second one follows, so the control never feels laggy -- a hard
+  // drop that starts one row lower lands in exactly the same place. The
+  // timer resets after a hard drop so a third press doesn't immediately slam
+  // the piece that just spawned.
+  //
+  // Auto-repeat from a held key is excluded: its events are milliseconds
+  // apart, so without this, holding Down would hard-drop instantly rather
+  // than gliding the piece down.
+  const DOUBLE_PRESS_MS = 300;
+  let lastDownPress = 0;
+
+  function pressDown(isAutoRepeat) {
+    const now = performance.now();
+    if (!isAutoRepeat && now - lastDownPress < DOUBLE_PRESS_MS) {
+      lastDownPress = 0;
+      hardDrop();
+      return;
+    }
+    lastDownPress = isAutoRepeat ? 0 : now;
+    if (!tryMoveDown()) fallLockPiece();
+  }
+
   function bindControls() {
     window.addEventListener('keydown', (e) => {
       if (screen !== 'game' || mode !== 'fall' || !running) return;
@@ -795,7 +822,7 @@
       switch (e.key) {
         case 'ArrowLeft': tryMoveHorizontal(-1); e.preventDefault(); break;
         case 'ArrowRight': tryMoveHorizontal(1); e.preventDefault(); break;
-        case 'ArrowDown': if (!tryMoveDown()) fallLockPiece(); e.preventDefault(); break;
+        case 'ArrowDown': pressDown(e.repeat); e.preventDefault(); break;
         case 'ArrowUp': case 'r': case 'R': tryRotate(); e.preventDefault(); break;
         case ' ': hardDrop(); e.preventDefault(); break;
       }
@@ -804,7 +831,7 @@
     const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (screen === 'game' && mode === 'fall' && running && !paused && current) fn(); });
     bind('btn-left', () => tryMoveHorizontal(-1));
     bind('btn-right', () => tryMoveHorizontal(1));
-    bind('btn-down', () => { if (!tryMoveDown()) fallLockPiece(); });
+    bind('btn-down', () => pressDown(false));
     bind('btn-rotate', tryRotate);
     bind('btn-drop', hardDrop);
 
