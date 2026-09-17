@@ -100,10 +100,7 @@
   const orientationBackBtn = document.getElementById('orientation-back-btn');
   const orientationCards = document.querySelectorAll('#orientation-screen .difficulty-card');
   const difficultyBackBtn = document.getElementById('difficulty-back-btn');
-  const helpLeftTitle = document.getElementById('help-left-title');
-  const helpLeft = document.getElementById('help-left');
-  const helpRightTitle = document.getElementById('help-right-title');
-  const helpRight = document.getElementById('help-right');
+  const helpCols = document.getElementById('controls-help-cols');
   const difficultyCards = document.querySelectorAll('#difficulty-screen .difficulty-card');
 
   let screen = 'home';
@@ -369,12 +366,73 @@
 
       rotateBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const slot = tray[i];
-        if (!slot) return;
-        slot.rotationIndex = (slot.rotationIndex + 1) % slot.shape.rotationStates.length;
-        renderTray();
+        rotateSlot(i);
       });
     }
+  }
+
+  function rotateSlot(index) {
+    const slot = tray[index];
+    if (!slot) return;
+    slot.rotationIndex = (slot.rotationIndex + 1) % slot.shape.rotationStates.length;
+    renderTray();
+  }
+
+  // ---------- place mode: keyboard ----------
+  //
+  // Placing was mouse- and touch-only, so on a desktop without a pointer it
+  // could not be played at all. The keyboard drives the same hoverAxial
+  // preview the pointer does, so the ghost and the placement rules are
+  // shared rather than duplicated.
+
+  function centreOfBoard() {
+    return offsetToAxial(Math.floor(NUM_COLS / 2), Math.floor(NUM_ROWS / 2));
+  }
+
+  function selectSlot(index) {
+    if (!tray[index]) return;
+    selectedSlot = index;
+    if (!hoverAxial) hoverAxial = centreOfBoard();
+    renderTray();
+  }
+
+  function cycleSlot(step) {
+    const from = selectedSlot < 0 ? -1 : selectedSlot;
+    for (let n = 1; n <= TRAY_SIZE; n++) {
+      const i = ((from + step * n) % TRAY_SIZE + TRAY_SIZE) % TRAY_SIZE;
+      if (tray[i]) { selectSlot(i); return; }
+    }
+  }
+
+  // Moves in offset (column, row) space so the arrow keys line up with what
+  // the player sees, rather than with the skewed axial axes.
+  function moveCursor(dCol, dRow) {
+    if (selectedSlot < 0) cycleSlot(1);
+    if (selectedSlot < 0) return;
+    if (!hoverAxial) { hoverAxial = centreOfBoard(); return; }
+    const [col, row] = axialToOffset(hoverAxial[0], hoverAxial[1]);
+    hoverAxial = offsetToAxial(
+      Math.max(0, Math.min(NUM_COLS - 1, col + dCol)),
+      Math.max(0, Math.min(NUM_ROWS - 1, row + dRow)));
+  }
+
+  function handlePlaceKey(e) {
+    if (!running || flashTimer > 0) return;
+    switch (e.key) {
+      case '1': case '2': case '3': selectSlot(Number(e.key) - 1); break;
+      case 'Tab': cycleSlot(e.shiftKey ? -1 : 1); break;
+      case 'ArrowLeft': moveCursor(-1, 0); break;
+      case 'ArrowRight': moveCursor(1, 0); break;
+      case 'ArrowUp': moveCursor(0, -1); break;
+      case 'ArrowDown': moveCursor(0, 1); break;
+      case 'r': case 'R': rotateSlot(selectedSlot); break;
+      case 'Enter': case ' ':
+        if (selectedSlot >= 0 && hoverAxial) placeAt(selectedSlot, hoverAxial[0], hoverAxial[1]);
+        break;
+      case 'Escape': selectedSlot = -1; hoverAxial = null; renderTray(); break;
+      default: return;
+    }
+    e.preventDefault();
   }
 
   function refillTrayIfEmpty() {
@@ -624,8 +682,12 @@
 
   // An entry is either [action, inputs] for a two-column row, or a plain
   // string for a full-width note.
-  function fillHelpColumn(container, entries) {
-    container.textContent = '';
+  function buildHelpColumn(title, entries) {
+    const col = document.createElement('div');
+    col.className = 'controls-help-col';
+    const heading = document.createElement('h3');
+    heading.textContent = title;
+    col.appendChild(heading);
     for (const entry of entries) {
       const row = document.createElement('div');
       if (typeof entry === 'string') {
@@ -641,8 +703,9 @@
         keys.textContent = entry[1];
         row.append(label, keys);
       }
-      container.appendChild(row);
+      col.appendChild(row);
     }
+    return col;
   }
 
   // Shown on the difficulty screen, the last stop before play starts. The
@@ -650,30 +713,36 @@
   // mostly irrelevant to whichever mode you picked.
   function renderControlsHelp(forMode) {
     const move = t('controls.left') + ' / ' + t('controls.right');
-    if (forMode === 'fall') {
-      helpLeftTitle.textContent = t('howto.keyboard');
-      fillHelpColumn(helpLeft, [
-        [move, '←  →'],
-        [t('controls.rotate'), '↑  /  R'],
-        [t('controls.softDrop'), '↓'],
-        [t('controls.hardDrop'), 'Space  ·  ↓↓'],
-        [t('game.hold'), 'C  /  Shift'],
-        [t('game.pause'), 'P'],
-      ]);
-      helpRightTitle.textContent = t('howto.touch');
-      fillHelpColumn(helpRight, [
-        [move, t('howto.swipe') + ' ←→  ·  ◀ ▶'],
-        [t('controls.rotate'), t('howto.swipe') + ' ↑  ·  ↻'],
-        [t('controls.softDrop'), '▼'],
-        [t('controls.hardDrop'), t('howto.swipe') + ' ↓  ·  ⤓  ·  ' + t('howto.doubleTap') + ' ▼'],
-        [t('game.hold'), t('howto.holdTap')],
-      ]);
-    } else {
-      helpLeftTitle.textContent = t('howto.mouse');
-      fillHelpColumn(helpLeft, [t('howto.placeMouse'), t('howto.placeRotate')]);
-      helpRightTitle.textContent = t('howto.touch');
-      fillHelpColumn(helpRight, [t('howto.placeTouch'), t('howto.placeRotate')]);
-    }
+    const columns = forMode === 'fall'
+      ? [
+          [t('howto.keyboard'), [
+            [move, '←  →'],
+            [t('controls.rotate'), '↑  /  R'],
+            [t('controls.softDrop'), '↓'],
+            [t('controls.hardDrop'), 'Space  ·  ↓↓'],
+            [t('game.hold'), 'C  /  Shift'],
+            [t('game.pause'), 'P'],
+          ]],
+          [t('howto.touch'), [
+            [move, t('howto.swipe') + ' ←→  ·  ◀ ▶'],
+            [t('controls.rotate'), t('howto.swipe') + ' ↑  ·  ↻'],
+            [t('controls.softDrop'), '▼'],
+            [t('controls.hardDrop'), t('howto.swipe') + ' ↓  ·  ⤓  ·  ' + t('howto.doubleTap') + ' ▼'],
+            [t('game.hold'), t('howto.holdTap')],
+          ]],
+        ]
+      : [
+          [t('howto.keyboard'), [
+            [t('howto.pick'), '1  2  3  ·  Tab'],
+            [t('howto.move'), '←  →  ↑  ↓'],
+            [t('controls.rotate'), 'R'],
+            [t('howto.place'), 'Enter  /  Space'],
+          ]],
+          [t('howto.mouse'), [t('howto.placeMouse'), t('howto.placeRotate')]],
+          [t('howto.touch'), [t('howto.placeTouch'), t('howto.placeRotate')]],
+        ];
+    helpCols.textContent = '';
+    for (const [title, entries] of columns) helpCols.appendChild(buildHelpColumn(title, entries));
   }
 
   function showDifficultyScreen(desiredMode) {
@@ -949,7 +1018,9 @@
 
   function bindControls() {
     window.addEventListener('keydown', (e) => {
-      if (screen !== 'game' || mode !== 'fall' || !running) return;
+      if (screen !== 'game') return;
+      if (mode === 'place') { handlePlaceKey(e); return; }
+      if (!running) return;
       if (e.key === 'p' || e.key === 'P') { setPaused(!paused); e.preventDefault(); return; }
       if (paused || !current) return;
       switch (e.key) {

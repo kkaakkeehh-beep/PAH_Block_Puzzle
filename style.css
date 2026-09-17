@@ -363,7 +363,7 @@ h1 .subtitle {
   box-shadow: var(--shadow);
   padding: 14px 18px;
   width: 100%;
-  max-width: 620px;
+  max-width: 700px;
 }
 
 #controls-help h2 {
@@ -382,7 +382,7 @@ h1 .subtitle {
 }
 
 .controls-help-col {
-  flex: 1 1 240px;
+  flex: 1 1 190px;
   min-width: 0;
 }
 
