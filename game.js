@@ -57,7 +57,13 @@
   const orientationToggle = document.getElementById('orientation-toggle');
   const orientFlatBtn = document.getElementById('orient-flat-btn');
   const orientPointyBtn = document.getElementById('orient-pointy-btn');
+  const homeScreen = document.getElementById('home-screen');
+  const gameScreen = document.getElementById('game-screen');
+  const homeFallBtn = document.getElementById('home-fall-btn');
+  const homePlaceBtn = document.getElementById('home-place-btn');
+  const homeBtn = document.getElementById('home-btn');
 
+  let screen = 'home';
   let mode = 'fall';
   let fallOrientation = 'flat';
   let board = new Map(); // axialKey -> color
@@ -341,8 +347,8 @@
 
   // ---------- mode switching / reset ----------
 
-  function setMode(newMode) {
-    if (mode === newMode) return;
+  function setMode(newMode, force) {
+    if (mode === newMode && !force) return;
     mode = newMode;
     modeFallBtn.classList.toggle('active', mode === 'fall');
     modePlaceBtn.classList.toggle('active', mode === 'place');
@@ -357,6 +363,22 @@
     setBoardSize(mode === 'fall' ? FALL_COLS : PLACE_COLS, mode === 'fall' ? FALL_ROWS : PLACE_ROWS);
     computeBoardLayout(boardCanvas);
     resetGame();
+  }
+
+  function enterGame(desiredMode) {
+    screen = 'game';
+    homeScreen.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+    setMode(desiredMode, true);
+  }
+
+  function goHome() {
+    screen = 'home';
+    running = false;
+    gameScreen.classList.add('hidden');
+    homeScreen.classList.remove('hidden');
+    overlay.classList.add('hidden');
+    pausedOverlay.classList.add('hidden');
   }
 
   function setFallOrientation(o) {
@@ -497,7 +519,7 @@
       }
     }
 
-    if (mode === 'fall' && running && !paused && !document.hidden) {
+    if (screen === 'game' && mode === 'fall' && running && !paused && !document.hidden) {
       dropAccumulator += dt;
       if (current && dropAccumulator >= dropIntervalMs) {
         dropAccumulator = 0;
@@ -511,7 +533,7 @@
 
   function bindControls() {
     window.addEventListener('keydown', (e) => {
-      if (mode !== 'fall' || !running) return;
+      if (screen !== 'game' || mode !== 'fall' || !running) return;
       if (e.key === 'p' || e.key === 'P') { setPaused(!paused); e.preventDefault(); return; }
       if (paused || !current) return;
       switch (e.key) {
@@ -523,7 +545,7 @@
       }
     });
 
-    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (mode === 'fall' && running && !paused && current) fn(); });
+    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (screen === 'game' && mode === 'fall' && running && !paused && current) fn(); });
     bind('btn-left', () => tryMoveHorizontal(-1));
     bind('btn-right', () => tryMoveHorizontal(1));
     bind('btn-down', () => { if (!tryMoveDown()) fallLockPiece(); });
@@ -538,6 +560,9 @@
     resumeBtn.addEventListener('click', () => setPaused(false));
     orientFlatBtn.addEventListener('click', () => setFallOrientation('flat'));
     orientPointyBtn.addEventListener('click', () => setFallOrientation('pointy'));
+    homeFallBtn.addEventListener('click', () => enterGame('fall'));
+    homePlaceBtn.addEventListener('click', () => enterGame('place'));
+    homeBtn.addEventListener('click', goHome);
 
     window.addEventListener('resize', () => computeBoardLayout(boardCanvas));
     bindBoardPointerForPlacing();
@@ -548,6 +573,6 @@
   setBoardSize(FALL_COLS, FALL_ROWS);
   computeBoardLayout(boardCanvas);
   bindControls();
-  resetGame();
+  bestScoreEl.textContent = Number(localStorage.getItem(HIGH_SCORE_KEY) || 0);
   requestAnimationFrame(tick);
 })();

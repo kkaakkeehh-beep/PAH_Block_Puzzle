@@ -17,44 +17,63 @@
     </div>
   </header>
 
-  <div id="mode-toggle" role="tablist">
-    <button id="mode-fall-btn" class="mode-btn active" role="tab">Falling</button>
-    <button id="mode-place-btn" class="mode-btn" role="tab">Placing</button>
-    <button id="pause-btn">Pause</button>
-  </div>
-
-  <div id="orientation-toggle" role="tablist">
-    <button id="orient-flat-btn" class="mode-btn active" role="tab">Flat-top</button>
-    <button id="orient-pointy-btn" class="mode-btn" role="tab">Pointy-top</button>
-  </div>
-
-  <div class="play-area">
-    <div class="board-wrap">
-      <canvas id="board-canvas"></canvas>
+  <div id="home-screen">
+    <p class="home-tagline">Fused-ring molecules, hex by hex. Pick a way to play.</p>
+    <div class="home-cards">
+      <button class="home-card" id="home-fall-btn">
+        <span class="home-card-icon">⬡</span>
+        <h2>Falling</h2>
+        <p>Molecules fall like Tetris — steer, rotate, and clear full rows before they stack up.</p>
+      </button>
+      <button class="home-card" id="home-place-btn">
+        <span class="home-card-icon">⬢</span>
+        <h2>Placing</h2>
+        <p>No rush — pick a molecule from the tray and fit it onto the board anywhere it goes.</p>
+      </button>
     </div>
-    <aside id="side-panel">
-      <div id="fall-panel">
-        <div class="panel-block">
-          <h2>Next</h2>
-          <canvas id="next-canvas"></canvas>
-          <div id="next-label" class="molecule-label"></div>
-        </div>
-        <div class="panel-block">
-          <h2>Falling</h2>
-          <div id="current-label" class="molecule-label"></div>
-        </div>
-      </div>
-      <div id="place-panel" class="hidden"></div>
-      <button id="new-game-btn">New Game</button>
-    </aside>
   </div>
 
-  <div id="touch-controls">
-    <button id="btn-left" aria-label="Left">◀</button>
-    <button id="btn-rotate" aria-label="Rotate">↻</button>
-    <button id="btn-right" aria-label="Right">▶</button>
-    <button id="btn-down" aria-label="Soft drop">▼</button>
-    <button id="btn-drop" aria-label="Hard drop">⤓</button>
+  <div id="game-screen" class="hidden">
+    <div id="mode-toggle" role="tablist">
+      <button id="home-btn" aria-label="Home">🏠</button>
+      <button id="mode-fall-btn" class="mode-btn active" role="tab">Falling</button>
+      <button id="mode-place-btn" class="mode-btn" role="tab">Placing</button>
+      <button id="pause-btn">Pause</button>
+    </div>
+
+    <div id="orientation-toggle" role="tablist">
+      <button id="orient-flat-btn" class="mode-btn active" role="tab">Flat-top</button>
+      <button id="orient-pointy-btn" class="mode-btn" role="tab">Pointy-top</button>
+    </div>
+
+    <div class="play-area">
+      <div class="board-wrap">
+        <canvas id="board-canvas"></canvas>
+      </div>
+      <aside id="side-panel">
+        <div id="fall-panel">
+          <div class="panel-block">
+            <h2>Next</h2>
+            <canvas id="next-canvas"></canvas>
+            <div id="next-label" class="molecule-label"></div>
+          </div>
+          <div class="panel-block">
+            <h2>Falling</h2>
+            <div id="current-label" class="molecule-label"></div>
+          </div>
+        </div>
+        <div id="place-panel" class="hidden"></div>
+        <button id="new-game-btn">New Game</button>
+      </aside>
+    </div>
+
+    <div id="touch-controls">
+      <button id="btn-left" aria-label="Left">◀</button>
+      <button id="btn-rotate" aria-label="Rotate">↻</button>
+      <button id="btn-right" aria-label="Right">▶</button>
+      <button id="btn-down" aria-label="Soft drop">▼</button>
+      <button id="btn-drop" aria-label="Hard drop">⤓</button>
+    </div>
   </div>
 
   <div id="game-over-overlay" class="hidden">
