@@ -28,8 +28,14 @@ function canPlaceCells(board, cells) {
   return cellsInBounds(cells) && cellsFree(board, cells);
 }
 
-function placeCells(board, cells, color) {
-  for (const [q, r] of cells) board.set(axialKey(q, r), color);
+// cells[i] corresponds to shape.offsets[i] (getPieceCells maps offsets in
+// place), so a locked cell can remember whether its ring carried one of the
+// molecule's Clar sextets long after the piece itself is gone.
+function placeCells(board, cells, shape) {
+  const bonds = kekuleBondsForCells(cells);
+  cells.forEach(([q, r], i) => {
+    board.set(axialKey(q, r), { color: shape.color, bonds: bonds[i] });
+  });
 }
 
 function clearFullRows(board, shiftDown) {
@@ -46,14 +52,14 @@ function clearFullRows(board, shiftDown) {
   fullRows.sort((a, b) => a - b);
 
   const newBoard = new Map();
-  for (const [key, color] of board) {
+  for (const [key, cell] of board) {
     const [q, r] = key.split(',').map(Number);
     const [col, row] = axialToOffset(q, r);
     if (fullRows.includes(row)) continue;
-    if (!shiftDown) { newBoard.set(key, color); continue; }
+    if (!shiftDown) { newBoard.set(key, cell); continue; }
     const shift = fullRows.filter(cr => cr > row).length;
     const [nq, nr] = offsetToAxial(col, row + shift);
-    newBoard.set(axialKey(nq, nr), color);
+    newBoard.set(axialKey(nq, nr), cell);
   }
   return { cleared: fullRows, board: newBoard };
 }
@@ -110,12 +116,188 @@ function drawHex(ctx, cx, cy, size, fillColor, strokeColor, lineWidth) {
   if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = lineWidth || 1; ctx.stroke(); }
 }
 
-function drawRingMark(ctx, cx, cy, size, color) {
-  ctx.beginPath();
-  ctx.arc(cx, cy, size * 0.42, 0, Math.PI * 2);
-  ctx.strokeStyle = color || 'rgba(255,255,255,0.6)';
-  ctx.lineWidth = Math.max(1, size * 0.06);
-  ctx.stroke();
+// ---------- Kekule structures ----------
+//
+// A circle inside a ring means six delocalised pi electrons, so putting one
+// in every ring of a fused system counts them twice over: naphthalene would
+// read as twelve pi electrons when it has ten. Drawing an explicit Kekule
+// structure sidesteps that -- every carbon carries exactly one double bond,
+// which is a perfect matching on the carbon skeleton.
+//
+// A molecule usually has several valid Kekule structures, so we enumerate
+// them all and keep the one with the most rings holding three alternating
+// double bonds. That is the structure with the maximum number of Clar
+// aromatic sextets -- the dominant resonance contributor, and the one
+// textbooks draw: phenanthrene ends up with its two end rings alternating
+// and a single C9=C10 bond in the middle, triphenylene with three outer
+// rings around an empty centre, and anthracene with only one such ring.
+//
+// Edge i of a hexagon runs from corner i to corner i+1, matching hexCorner,
+// so an edge index means the same thing to the drawing code.
+function kekuleBondsFromCorners(cornerLists) {
+  const ids = new Map();
+  const adj = [];
+  const idOf = (x, y) => {
+    const k = Math.round(x * 1000) + ',' + Math.round(y * 1000);
+    if (!ids.has(k)) { ids.set(k, adj.length); adj.push([]); }
+    return ids.get(k);
+  };
+
+  const hexVerts = cornerLists.map(pts => pts.map(([x, y]) => idOf(x, y)));
+  const edgeOwners = new Map();
+  hexVerts.forEach((verts, h) => {
+    for (let i = 0; i < 6; i++) {
+      const a = verts[i], b = verts[(i + 1) % 6];
+      if (!adj[a].includes(b)) { adj[a].push(b); adj[b].push(a); }
+      const k = Math.min(a, b) + '|' + Math.max(a, b);
+      if (!edgeOwners.has(k)) edgeOwners.set(k, []);
+      edgeOwners.get(k).push([h, i]);
+    }
+  });
+
+  // Two rings conflict when they share a carbon, whether across a fusion
+  // bond or at a single peri atom. Sextets have to be carbon-disjoint: both
+  // rings of naphthalene hold three double bonds at once, but they share the
+  // C4a=C8a bond, so only one of them is a sextet and the molecule reads as
+  // ten pi electrons rather than twelve. Sharing carbons with a *non*-sextet
+  // ring is fine, which is what makes pyrene's two sextets legal.
+  const ringSets = hexVerts.map(verts => new Set(verts));
+  const conflict = hexVerts.map((verts, a) =>
+    hexVerts.map((_, b) => a !== b && verts.some(v => ringSets[b].has(v))));
+
+  const isShared = hexVerts.map(verts => {
+    const flags = [];
+    for (let i = 0; i < 6; i++) {
+      const a = verts[i], b = verts[(i + 1) % 6];
+      flags.push(edgeOwners.get(Math.min(a, b) + '|' + Math.max(a, b)).length > 1);
+    }
+    return flags;
+  });
+
+  const n = adj.length;
+  const matched = new Array(n).fill(-1);
+  let best = null, bestSextets = -1, bestFused = Infinity;
+
+  const maxDisjoint = (cands) => {
+    let top = 0;
+    const rec = (idx, chosen, count) => {
+      if (count + (cands.length - idx) <= top) return;
+      if (idx === cands.length) { top = Math.max(top, count); return; }
+      const c = cands[idx];
+      if (!chosen.some(x => conflict[x][c])) {
+        chosen.push(c);
+        rec(idx + 1, chosen, count + 1);
+        chosen.pop();
+      }
+      rec(idx + 1, chosen, count);
+    };
+    rec(0, [], 0);
+    return top;
+  };
+
+  // Several Kekule structures can tie on sextet count, so the tie is broken
+  // by putting as few double bonds as possible on ring-fusion bonds. That
+  // picks the form chemists actually draw: phenanthrene with three bonds
+  // inside each end ring and a lone C9=C10 across the middle, rather than an
+  // equally valid form that doubles a fusion bond.
+  const score = () => {
+    const cands = [];
+    let fused = 0;
+    hexVerts.forEach((verts, h) => {
+      let doubles = 0;
+      for (let i = 0; i < 6; i++) {
+        if (matched[verts[i]] !== verts[(i + 1) % 6]) continue;
+        doubles++;
+        if (isShared[h][i]) fused++;
+      }
+      if (doubles === 3) cands.push(h);
+    });
+    return [maxDisjoint(cands), fused / 2];
+  };
+
+  const search = () => {
+    let pick = -1, fewest = Infinity;
+    for (let v = 0; v < n; v++) {
+      if (matched[v] !== -1) continue;
+      let free = 0;
+      for (const u of adj[v]) if (matched[u] === -1) free++;
+      if (free < fewest) { fewest = free; pick = v; }
+    }
+    if (pick === -1) {
+      const [sextets, fused] = score();
+      if (sextets > bestSextets || (sextets === bestSextets && fused < bestFused)) {
+        bestSextets = sextets;
+        bestFused = fused;
+        best = matched.slice();
+      }
+      return;
+    }
+    if (fewest === 0) return;
+    for (const u of adj[pick]) {
+      if (matched[u] !== -1) continue;
+      matched[pick] = u; matched[u] = pick;
+      search();
+      matched[pick] = -1; matched[u] = -1;
+    }
+  };
+  search();
+
+  const bonds = cornerLists.map(() => []);
+  if (!best) return bonds;
+  for (let v = 0; v < n; v++) {
+    const u = best[v];
+    if (u < v) continue;
+    for (const [h, i] of edgeOwners.get(v + '|' + u) || []) bonds[h].push(i);
+  }
+  return bonds;
+}
+
+function cornersForCells(cells) {
+  return cells.map(([q, r]) => {
+    const [cx, cy] = axialToPixel(q, r, 1);
+    const pts = [];
+    for (let i = 0; i < 6; i++) pts.push(hexCorner(cx, cy, 1, i));
+    return pts;
+  });
+}
+
+// Translation-invariant, so results are cached per shape + rotation. The
+// orientation is part of the key because flipping flat-top to pointy-top
+// renumbers the corners, and with them the edge indices.
+const kekuleCache = new Map();
+
+function kekuleBondsForCells(cells) {
+  return kekuleBondsFromCorners(cornersForCells(cells));
+}
+
+function kekuleBondsForPiece(shape, rotationIndex) {
+  const key = getOrientation() + '|' + shape.name + '|' + rotationIndex;
+  let bonds = kekuleCache.get(key);
+  if (!bonds) {
+    bonds = kekuleBondsForCells(shape.rotationStates[rotationIndex]);
+    kekuleCache.set(key, bonds);
+  }
+  return bonds;
+}
+
+function drawDoubleBonds(ctx, cx, cy, size, edges, color, lineWidth) {
+  if (!edges || edges.length === 0) return;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth || Math.max(1, size * 0.09);
+  ctx.lineCap = 'round';
+  for (const i of edges) {
+    const [x1, y1] = hexCorner(cx, cy, size, i);
+    const [x2, y2] = hexCorner(cx, cy, size, i + 1);
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const len = Math.hypot(cx - mx, cy - my) || 1;
+    const nx = (cx - mx) / len * size * 0.2;
+    const ny = (cy - my) / len * size * 0.2;
+    const t = 0.2;
+    ctx.beginPath();
+    ctx.moveTo(x1 + (x2 - x1) * t + nx, y1 + (y2 - y1) * t + ny);
+    ctx.lineTo(x2 - (x2 - x1) * t + nx, y2 - (y2 - y1) * t + ny);
+    ctx.stroke();
+  }
 }
 
 function drawBoardGrid(ctx) {
@@ -128,13 +310,13 @@ function drawBoardGrid(ctx) {
 }
 
 function drawLockedCells(ctx, board, flashRowSet, flashOn) {
-  for (const [key, color] of board) {
+  for (const [key, cell] of board) {
     const [q, r] = key.split(',').map(Number);
     const [col, row] = axialToOffset(q, r);
     const [cx, cy] = cellCenter(col, row);
     const lit = flashOn && flashRowSet.has(row);
-    drawHex(ctx, cx, cy, hexSize * 0.94, lit ? '#ffffff' : color, 'rgba(0,0,0,0.25)', 1.5);
-    if (!lit) drawRingMark(ctx, cx, cy, hexSize, 'rgba(255,255,255,0.55)');
+    drawHex(ctx, cx, cy, hexSize * 0.94, lit ? '#ffffff' : cell.color, 'rgba(0,0,0,0.25)', 1.5);
+    if (!lit) drawDoubleBonds(ctx, cx, cy, hexSize * 0.94, cell.bonds, 'rgba(255,255,255,0.75)');
   }
 }
 

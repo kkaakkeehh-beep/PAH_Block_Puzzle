@@ -17,6 +17,10 @@ function setOrientation(o) {
   ORIENTATION = o;
 }
 
+function getOrientation() {
+  return ORIENTATION;
+}
+
 function axialKey(q, r) {
   return q + ',' + r;
 }

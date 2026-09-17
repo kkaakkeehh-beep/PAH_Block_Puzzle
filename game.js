@@ -295,7 +295,7 @@
   }
 
   function fallLockPiece() {
-    placeCells(board, fallCells(current), current.shape.color);
+    placeCells(board, fallCells(current), current.shape);
     score += current.shape.rotationStates[0].length * 10;
     current = null;
     updateHud();
@@ -372,7 +372,7 @@
     if (!slot) return false;
     const cells = getPieceCells(slot.shape, slot.rotationIndex, anchorQ, anchorR);
     if (!canPlaceCells(board, cells)) return false;
-    placeCells(board, cells, slot.shape.color);
+    placeCells(board, cells, slot.shape);
     score += cells.length * 10;
     tray[slotIndex] = null;
     selectedSlot = -1;
@@ -546,9 +546,10 @@
       }
       const cx0 = (cssSize - (maxX - minX)) / 2 - minX;
       const cy0 = (cssSize - (maxY - minY)) / 2 - minY;
-      pts.forEach(([x, y]) => {
+      const bonds = kekuleBondsForPiece(slot.shape, slot.rotationIndex);
+      pts.forEach(([x, y], i) => {
         drawHex(ui.ctx, x + cx0, y + cy0, size * 0.92, slot.shape.color, '#1d2126', 1.5);
-        drawRingMark(ui.ctx, x + cx0, y + cy0, size, 'rgba(255,255,255,0.7)');
+        drawDoubleBonds(ui.ctx, x + cx0, y + cy0, size * 0.92, bonds[i], 'rgba(255,255,255,0.85)');
       });
     });
   }
@@ -696,12 +697,13 @@
         const [cx, cy] = cellCenter(col, row);
         drawHex(boardCtx, cx, cy, hexSize * 0.9, 'rgba(255,255,255,0.12)', current.shape.color, 1.5);
       }
-      for (const [q, r] of fallCells(current)) {
+      const currentBonds = kekuleBondsForPiece(current.shape, current.rotationIndex);
+      fallCells(current).forEach(([q, r], i) => {
         const [col, row] = axialToOffset(q, r);
         const [cx, cy] = cellCenter(col, row);
         drawHex(boardCtx, cx, cy, hexSize * 0.94, current.shape.color, '#1d2126', 2);
-        drawRingMark(boardCtx, cx, cy, hexSize, 'rgba(255,255,255,0.7)');
-      }
+        drawDoubleBonds(boardCtx, cx, cy, hexSize * 0.94, currentBonds[i], 'rgba(255,255,255,0.85)');
+      });
       renderNextPreview();
     }
 
@@ -739,9 +741,10 @@
     }
     const cx0 = (cssSize - (maxX - minX)) / 2 - minX;
     const cy0 = (cssSize - (maxY - minY)) / 2 - minY;
-    pts.forEach(([x, y]) => {
+    const bonds = kekuleBondsForPiece(next.shape, 0);
+    pts.forEach(([x, y], i) => {
       drawHex(nextCtx, x + cx0, y + cy0, size * 0.92, next.shape.color, '#1d2126', 1.5);
-      drawRingMark(nextCtx, x + cx0, y + cy0, size, 'rgba(255,255,255,0.7)');
+      drawDoubleBonds(nextCtx, x + cx0, y + cy0, size * 0.92, bonds[i], 'rgba(255,255,255,0.85)');
     });
   }
 
