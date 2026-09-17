@@ -57,11 +57,15 @@
   const orientPointyBtn = document.getElementById('orient-pointy-btn');
   const homeScreen = document.getElementById('home-screen');
   const gameScreen = document.getElementById('game-screen');
+  const difficultyScreen = document.getElementById('difficulty-screen');
   const homeFallBtn = document.getElementById('home-fall-btn');
   const homePlaceBtn = document.getElementById('home-place-btn');
   const homeBtn = document.getElementById('home-btn');
+  const difficultyBackBtn = document.getElementById('difficulty-back-btn');
+  const difficultyCards = document.querySelectorAll('.difficulty-card');
 
   let screen = 'home';
+  let pendingMode = null;
   let mode = 'fall';
   let fallOrientation = 'flat';
   let board = new Map(); // axialKey -> color
@@ -361,8 +365,17 @@
     resetGame();
   }
 
-  function enterGame(desiredMode) {
+  function showDifficultyScreen(desiredMode) {
+    pendingMode = desiredMode;
+    screen = 'difficulty';
+    homeScreen.classList.add('hidden');
+    difficultyScreen.classList.remove('hidden');
+  }
+
+  function enterGame(desiredMode, difficultyFactor) {
+    setDifficultyFactor(difficultyFactor);
     screen = 'game';
+    difficultyScreen.classList.add('hidden');
     homeScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
     setMode(desiredMode, true);
@@ -370,8 +383,10 @@
 
   function goHome() {
     screen = 'home';
+    pendingMode = null;
     running = false;
     gameScreen.classList.add('hidden');
+    difficultyScreen.classList.add('hidden');
     homeScreen.classList.remove('hidden');
     overlay.classList.add('hidden');
     pausedOverlay.classList.add('hidden');
@@ -554,9 +569,18 @@
     resumeBtn.addEventListener('click', () => setPaused(false));
     orientFlatBtn.addEventListener('click', () => setFallOrientation('flat'));
     orientPointyBtn.addEventListener('click', () => setFallOrientation('pointy'));
-    homeFallBtn.addEventListener('click', () => enterGame('fall'));
-    homePlaceBtn.addEventListener('click', () => enterGame('place'));
+    homeFallBtn.addEventListener('click', () => showDifficultyScreen('fall'));
+    homePlaceBtn.addEventListener('click', () => showDifficultyScreen('place'));
     homeBtn.addEventListener('click', goHome);
+    difficultyBackBtn.addEventListener('click', () => {
+      screen = 'home';
+      pendingMode = null;
+      difficultyScreen.classList.add('hidden');
+      homeScreen.classList.remove('hidden');
+    });
+    difficultyCards.forEach(card => {
+      card.addEventListener('click', () => enterGame(pendingMode, Number(card.dataset.factor)));
+    });
 
     window.addEventListener('resize', () => computeBoardLayout(boardCanvas));
     bindBoardPointerForPlacing();

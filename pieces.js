@@ -48,15 +48,26 @@ function computeRotationStates(baseOffsets) {
 
 for (const shape of PAH_SHAPES) {
   shape.rotationStates = computeRotationStates(shape.offsets);
+  shape.rings = shape.offsets.length;
 }
 
-const PIECE_WEIGHT_TOTAL = PAH_SHAPES.reduce((sum, s) => sum + s.weight, 0);
+// Weights above are tuned for "Normal" (factor 1). Raising the factor biases
+// selection toward more-ringed (more complex) molecules exponentially in
+// ring count, so higher difficulty visibly skews toward the bigger pieces
+// without ever making the small ones impossible.
+let DIFFICULTY_FACTOR = 1;
+
+function setDifficultyFactor(factor) {
+  DIFFICULTY_FACTOR = factor;
+}
 
 function pickRandomShape() {
-  let r = Math.random() * PIECE_WEIGHT_TOTAL;
-  for (const shape of PAH_SHAPES) {
-    if (r < shape.weight) return shape;
-    r -= shape.weight;
+  const weights = PAH_SHAPES.map(s => s.weight * Math.pow(DIFFICULTY_FACTOR, s.rings - 1));
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < PAH_SHAPES.length; i++) {
+    if (r < weights[i]) return PAH_SHAPES[i];
+    r -= weights[i];
   }
   return PAH_SHAPES[0];
 }

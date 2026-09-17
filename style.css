@@ -229,6 +229,70 @@ h1 .subtitle {
   line-height: 1.4;
 }
 
+#difficulty-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 8px;
+  align-items: center;
+}
+
+#difficulty-screen.hidden { display: none; }
+
+.difficulty-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+
+.difficulty-card {
+  flex: 1 1 160px;
+  max-width: 190px;
+  background: var(--paper);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 18px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.difficulty-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(30, 30, 20, 0.18);
+}
+
+.difficulty-card h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.difficulty-card p {
+  margin: 0;
+  font-size: 0.78rem;
+  opacity: 0.75;
+  line-height: 1.35;
+}
+
+.text-back-btn {
+  background: none;
+  color: var(--ink);
+  opacity: 0.6;
+  box-shadow: none;
+  padding: 6px 10px;
+  font-weight: 500;
+}
+
+.text-back-btn:hover {
+  background: none;
+  opacity: 1;
+}
+
 #orientation-toggle {
   display: flex;
   gap: 8px;
