@@ -32,7 +32,7 @@ function placeCells(board, cells, color) {
   for (const [q, r] of cells) board.set(axialKey(q, r), color);
 }
 
-function clearFullRows(board) {
+function clearFullRows(board, shiftDown) {
   const rowCols = new Map();
   for (const key of board.keys()) {
     const [q, r] = key.split(',').map(Number);
@@ -50,6 +50,7 @@ function clearFullRows(board) {
     const [q, r] = key.split(',').map(Number);
     const [col, row] = axialToOffset(q, r);
     if (fullRows.includes(row)) continue;
+    if (!shiftDown) { newBoard.set(key, color); continue; }
     const shift = fullRows.filter(cr => cr > row).length;
     const [nq, nr] = offsetToAxial(col, row + shift);
     newBoard.set(axialKey(nq, nr), color);

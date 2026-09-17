@@ -76,7 +76,7 @@
   // Cleared rows blink in place for CLEAR_FLASH_MS before actually being
   // removed from the board -- afterClear runs once that removal happens.
   function applyLineClears(afterClear) {
-    const { cleared, board: newBoard } = clearFullRows(board);
+    const { cleared, board: newBoard } = clearFullRows(board, mode === 'fall');
     if (cleared.length === 0) {
       afterClear();
       return;
