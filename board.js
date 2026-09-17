@@ -1,5 +1,5 @@
-const NUM_COLS = 9;
-const NUM_ROWS = 16;
+const NUM_COLS = 7;
+const NUM_ROWS = 14;
 
 let hexSize = 20;
 let originX = 0, originY = 0;

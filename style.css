@@ -242,7 +242,7 @@ button:active { transform: scale(0.95); }
   padding: 12px 0;
 }
 
-#game-over-overlay {
+#game-over-overlay, #paused-overlay {
   position: fixed;
   inset: 0;
   background: rgba(10, 12, 14, 0.55);
@@ -252,7 +252,7 @@ button:active { transform: scale(0.95); }
   z-index: 10;
 }
 
-#game-over-overlay.hidden { display: none; }
+#game-over-overlay.hidden, #paused-overlay.hidden { display: none; }
 
 .game-over-card {
   background: var(--paper);

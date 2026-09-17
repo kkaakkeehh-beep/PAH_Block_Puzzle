@@ -25,12 +25,16 @@
   const touchControls = document.getElementById('touch-controls');
   const modeFallBtn = document.getElementById('mode-fall-btn');
   const modePlaceBtn = document.getElementById('mode-place-btn');
+  const pauseBtn = document.getElementById('pause-btn');
+  const pausedOverlay = document.getElementById('paused-overlay');
+  const resumeBtn = document.getElementById('resume-btn');
 
   let mode = 'fall';
   let board = new Map(); // axialKey -> color
   let score = 0, level = 1, linesCleared = 0;
   let gameOver = false;
   let running = false;
+  let paused = false;
   let flashRows = [];
   let flashTimer = 0;
 
@@ -305,6 +309,13 @@
     resetGame();
   }
 
+  function setPaused(value) {
+    if (mode !== 'fall' || !running) return;
+    paused = value;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    pausedOverlay.classList.toggle('hidden', !paused);
+  }
+
   function resetGame() {
     board = new Map();
     score = 0;
@@ -315,6 +326,9 @@
     flashTimer = 0;
     overlay.classList.add('hidden');
     running = true;
+    paused = false;
+    pauseBtn.textContent = 'Pause';
+    pausedOverlay.classList.add('hidden');
     selectedSlot = -1;
     hoverAxial = null;
 
@@ -408,7 +422,7 @@
       if (flashTimer <= 0) flashRows = [];
     }
 
-    if (mode === 'fall' && running && !document.hidden) {
+    if (mode === 'fall' && running && !paused && !document.hidden) {
       dropAccumulator += dt;
       if (dropAccumulator >= dropIntervalMs) {
         dropAccumulator = 0;
@@ -423,6 +437,8 @@
   function bindControls() {
     window.addEventListener('keydown', (e) => {
       if (mode !== 'fall' || !running) return;
+      if (e.key === 'p' || e.key === 'P') { setPaused(!paused); e.preventDefault(); return; }
+      if (paused) return;
       switch (e.key) {
         case 'ArrowLeft': tryMoveHorizontal(-1); e.preventDefault(); break;
         case 'ArrowRight': tryMoveHorizontal(1); e.preventDefault(); break;
@@ -432,7 +448,7 @@
       }
     });
 
-    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (mode === 'fall' && running) fn(); });
+    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (mode === 'fall' && running && !paused) fn(); });
     bind('btn-left', () => tryMoveHorizontal(-1));
     bind('btn-right', () => tryMoveHorizontal(1));
     bind('btn-down', () => { if (!tryMoveDown()) fallLockPiece(); });
@@ -443,6 +459,8 @@
     document.getElementById('restart-btn').addEventListener('click', resetGame);
     modeFallBtn.addEventListener('click', () => setMode('fall'));
     modePlaceBtn.addEventListener('click', () => setMode('place'));
+    pauseBtn.addEventListener('click', () => setPaused(!paused));
+    resumeBtn.addEventListener('click', () => setPaused(false));
 
     window.addEventListener('resize', () => computeBoardLayout(boardCanvas));
     bindBoardPointerForPlacing();

@@ -37,6 +37,7 @@
           <h2>Falling</h2>
           <div id="current-label" class="molecule-label"></div>
         </div>
+        <button id="pause-btn">Pause</button>
       </div>
       <div id="place-panel" class="hidden"></div>
       <button id="new-game-btn">New Game</button>
@@ -58,6 +59,13 @@
       <p id="final-score">0</p>
       <p id="new-best" class="hidden">New best score!</p>
       <button id="restart-btn">New Game</button>
+    </div>
+  </div>
+
+  <div id="paused-overlay" class="hidden">
+    <div class="game-over-card">
+      <h2>Paused</h2>
+      <button id="resume-btn">Resume</button>
     </div>
   </div>
 </div>
