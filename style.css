@@ -119,6 +119,9 @@ h1 .subtitle {
   display: block;
   max-width: 100%;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #side-panel {
@@ -356,6 +359,9 @@ h1 .subtitle {
   margin: 0 auto;
   cursor: pointer;
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .tray-rotate-btn {

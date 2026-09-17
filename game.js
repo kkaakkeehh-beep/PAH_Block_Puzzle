@@ -336,7 +336,8 @@
 
     function updateHoverFromEvent(e) {
       const rect = boardCanvas.getBoundingClientRect();
-      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      const pad = 24; // release a little past the visual edge still counts
+      const inside = e.clientX >= rect.left - pad && e.clientX <= rect.right + pad && e.clientY >= rect.top - pad && e.clientY <= rect.bottom + pad;
       hoverAxial = inside ? boardPointerToAxial(e.clientX, e.clientY) : null;
     }
 
@@ -345,11 +346,8 @@
       const slot = draggingSlot;
       draggingSlot = -1;
       draggingPointerId = null;
-      if (hoverAxial && running && flashTimer === 0) {
-        placeAt(slot, hoverAxial[0], hoverAxial[1]);
-      } else {
-        selectedSlot = selectedSlot === slot ? -1 : slot;
-      }
+      const placed = hoverAxial && running && flashTimer === 0 && placeAt(slot, hoverAxial[0], hoverAxial[1]);
+      if (!placed) selectedSlot = selectedSlot === slot ? -1 : slot;
       hoverAxial = null;
       renderTray();
     }
