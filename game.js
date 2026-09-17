@@ -39,6 +39,22 @@
   function getStoredBest(forMode) {
     return Number(localStorage.getItem(HIGH_SCORE_KEYS[forMode]) || 0);
   }
+
+  // Which molecules the player has actually landed, for the home-screen
+  // collection. Recorded on placement rather than on spawn, so a molecule
+  // you only watched go past doesn't count.
+  const SEEN_KEY = 'pahBlockPuzzleSeen';
+  let seenMolecules = new Set();
+  try {
+    const stored = JSON.parse(localStorage.getItem(SEEN_KEY) || '[]');
+    if (Array.isArray(stored)) seenMolecules = new Set(stored);
+  } catch (err) { /* corrupt entry: start the collection over */ }
+
+  function markSeen(shape) {
+    if (seenMolecules.has(shape.name)) return;
+    seenMolecules.add(shape.name);
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...seenMolecules]));
+  }
   const TRAY_SIZE = 3;
 
   // Level (shown in the HUD) climbs from lines cleared OR just from time
@@ -101,6 +117,8 @@
   const orientationCards = document.querySelectorAll('#orientation-screen .difficulty-card');
   const difficultyBackBtn = document.getElementById('difficulty-back-btn');
   const helpCols = document.getElementById('controls-help-cols');
+  const collectionGrid = document.getElementById('collection-grid');
+  const collectionCount = document.getElementById('collection-count');
   const difficultyCards = document.querySelectorAll('#difficulty-screen .difficulty-card');
 
   let screen = 'home';
@@ -154,6 +172,40 @@
 
   // Each mode keeps its own best, so the home cards show both side by side
   // instead of collapsing them into one number.
+  // Tiles for every molecule in the set, greyed out until you've landed one.
+  // Drawn flat-top regardless of the orientation the last game used, so the
+  // collection looks the same from one visit to the next.
+  function renderCollection() {
+    setOrientation('flat');
+    collectionGrid.textContent = '';
+    let found = 0;
+    for (const shape of PAH_SHAPES) {
+      const seen = seenMolecules.has(shape.name);
+      if (seen) found++;
+      const tile = document.createElement('div');
+      tile.className = 'collection-tile';
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const w = 74, h = 52;
+      sizeCanvas(canvas, ctx, w, h);
+      if (seen) {
+        drawMoleculeIn(ctx, shape, 7.5, 0, 0, w, h, 1);
+      } else {
+        drawMoleculeIn(ctx, shape, 7.5, 0, 0, w, h, 1,
+          'rgba(127,133,140,0.22)', 'rgba(127,133,140,0.55)', true);
+      }
+      const name = document.createElement('div');
+      name.className = 'collection-name';
+      name.textContent = seen ? shape.name : '???';
+      const formula = document.createElement('div');
+      formula.className = 'collection-formula';
+      formula.textContent = seen ? shape.formula : '';
+      tile.append(canvas, name, formula);
+      collectionGrid.appendChild(tile);
+    }
+    collectionCount.textContent = found + ' / ' + PAH_SHAPES.length;
+  }
+
   function refreshHomeBests() {
     homeFallBest.textContent = getStoredBest('fall');
     homePlaceBest.textContent = getStoredBest('place');
@@ -312,6 +364,7 @@
 
   function fallLockPiece() {
     placeCells(board, fallCells(current), current.shape);
+    markSeen(current.shape);
     score += current.shape.rotationStates[0].length * 10;
     current = null;
     updateHud();
@@ -468,6 +521,7 @@
     const cells = getPieceCells(slot.shape, slot.rotationIndex, anchorQ, anchorR);
     if (!canPlaceCells(board, cells)) return false;
     placeCells(board, cells, slot.shape);
+    markSeen(slot.shape);
     score += cells.length * 10;
     tray[slotIndex] = null;
     selectedSlot = -1;
@@ -774,6 +828,7 @@
     overlay.classList.add('hidden');
     pausedOverlay.classList.add('hidden');
     refreshHomeBests();
+    renderCollection();
     window.scrollTo(0, 0);
   }
 
@@ -897,7 +952,9 @@
   }
 
   // Draws a molecule centred inside the box (boxX, boxY, boxW, boxH).
-  function drawMoleculeIn(ctx, shape, size, boxX, boxY, boxW, boxH, alpha) {
+  // fill and outline override the molecule's own colours, and silhouette
+  // leaves the double bonds off, for the not-yet-found collection tiles.
+  function drawMoleculeIn(ctx, shape, size, boxX, boxY, boxW, boxH, alpha, fill, outline, silhouette) {
     const pts = shape.rotationStates[0].map(([q, r]) => axialToPixel(q, r, size));
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const [x, y] of pts) {
@@ -910,8 +967,10 @@
     ctx.save();
     if (alpha !== undefined) ctx.globalAlpha = alpha;
     pts.forEach(([x, y], i) => {
-      drawHex(ctx, x + ox, y + oy, size * 0.92, shape.color, '#1d2126', 1.5);
-      drawDoubleBonds(ctx, x + ox, y + oy, size * 0.92, bonds[i], 'rgba(255,255,255,0.85)');
+      drawHex(ctx, x + ox, y + oy, size * 0.92, fill || shape.color, outline || '#1d2126', 1.5);
+      if (!silhouette) {
+        drawDoubleBonds(ctx, x + ox, y + oy, size * 0.92, bonds[i], 'rgba(255,255,255,0.85)');
+      }
     });
     ctx.restore();
   }
@@ -1106,5 +1165,6 @@
   computeBoardLayout(boardCanvas);
   bindControls();
   refreshHomeBests();
+  renderCollection();
   requestAnimationFrame(tick);
 })();

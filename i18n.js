@@ -41,6 +41,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "The ↻ button under each molecule turns it by 60°.",
     "game.hold": "Hold", "howto.holdTap": "Tap the Hold panel",
     "howto.pick": "Pick a molecule", "howto.move": "Move", "howto.place": "Place",
+    "collection.title": "Molecules",
   },
   ja: {
     subtitle: "多環芳香族ブロックパズル",
@@ -84,6 +85,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "分子の下の ↻ ボタンで60°回転します。",
     "game.hold": "ホールド", "howto.holdTap": "ホールド欄をタップ",
     "howto.pick": "分子を選ぶ", "howto.move": "移動", "howto.place": "置く",
+    "collection.title": "分子図鑑",
   },
   zh: {
     subtitle: "多环芳香烃方块拼图",
@@ -127,6 +129,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "分子下方的 ↻ 按钮可旋转 60°。",
     "game.hold": "暂存", "howto.holdTap": "点击暂存栏",
     "howto.pick": "选择分子", "howto.move": "移动", "howto.place": "放置",
+    "collection.title": "分子图鉴",
   },
   "zh-TW": {
     subtitle: "多環芳香烴方塊拼圖",
@@ -170,6 +173,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "分子下方的 ↻ 按鈕可旋轉 60°。",
     "game.hold": "暫存", "howto.holdTap": "點擊暫存欄",
     "howto.pick": "選擇分子", "howto.move": "移動", "howto.place": "放置",
+    "collection.title": "分子圖鑑",
   },
   ko: {
     subtitle: "다환 방향족 블록 퍼즐",
@@ -213,6 +217,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "분자 아래의 ↻ 버튼으로 60° 회전합니다.",
     "game.hold": "홀드", "howto.holdTap": "홀드 칸을 탭",
     "howto.pick": "분자 선택", "howto.move": "이동", "howto.place": "놓기",
+    "collection.title": "분자 도감",
   },
   bg: {
     subtitle: "Пъзел с полициклични ароматни блокчета",
@@ -256,6 +261,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Бутонът ↻ под всяка молекула я завърта на 60°.",
     "game.hold": "Запази", "howto.holdTap": "Докоснете полето за запазване",
     "howto.pick": "Избор на молекула", "howto.move": "Преместване", "howto.place": "Поставяне",
+    "collection.title": "Молекули",
   },
   de: {
     subtitle: "Polyzyklisches aromatisches Block-Puzzle",
@@ -299,6 +305,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Die Taste ↻ unter jedem Molekül dreht es um 60°.",
     "game.hold": "Halten", "howto.holdTap": "Auf das Halten-Feld tippen",
     "howto.pick": "Molekül wählen", "howto.move": "Bewegen", "howto.place": "Setzen",
+    "collection.title": "Moleküle",
   },
   et: {
     subtitle: "Polütsükliliste aromaatsete plokkide pusle",
@@ -342,6 +349,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Iga molekuli all olev nupp ↻ pöörab seda 60° võrra.",
     "game.hold": "Hoia", "howto.holdTap": "Puuduta hoiukasti",
     "howto.pick": "Vali molekul", "howto.move": "Liiguta", "howto.place": "Aseta",
+    "collection.title": "Molekulid",
   },
   el: {
     subtitle: "Παζλ με πολυκυκλικά αρωματικά μπλοκ",
@@ -385,6 +393,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Το κουμπί ↻ κάτω από κάθε μόριο το περιστρέφει κατά 60°.",
     "game.hold": "Κράτηση", "howto.holdTap": "Πάτησε το πλαίσιο Κράτησης",
     "howto.pick": "Επιλογή μορίου", "howto.move": "Μετακίνηση", "howto.place": "Τοποθέτηση",
+    "collection.title": "Μόρια",
   },
   es: {
     subtitle: "Rompecabezas de bloques aromáticos policíclicos",
@@ -428,6 +437,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "El botón ↻ bajo cada molécula la gira 60°.",
     "game.hold": "Reserva", "howto.holdTap": "Toca el panel de reserva",
     "howto.pick": "Elegir molécula", "howto.move": "Mover", "howto.place": "Colocar",
+    "collection.title": "Moléculas",
   },
   fr: {
     subtitle: "Puzzle de blocs aromatiques polycycliques",
@@ -471,6 +481,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Le bouton ↻ sous chaque molécule la fait pivoter de 60°.",
     "game.hold": "Réserve", "howto.holdTap": "Touchez la case Réserve",
     "howto.pick": "Choisir une molécule", "howto.move": "Déplacer", "howto.place": "Poser",
+    "collection.title": "Molécules",
   },
   it: {
     subtitle: "Rompicapo a blocchi aromatici policiclici",
@@ -514,6 +525,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Il pulsante ↻ sotto ogni molecola la ruota di 60°.",
     "game.hold": "Riserva", "howto.holdTap": "Tocca il riquadro Riserva",
     "howto.pick": "Scegli molecola", "howto.move": "Sposta", "howto.place": "Posiziona",
+    "collection.title": "Molecole",
   },
   pl: {
     subtitle: "Układanka z wielopierścieniowych węglowodorów aromatycznych",
@@ -557,6 +569,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Przycisk ↻ pod każdą cząsteczką obraca ją o 60°.",
     "game.hold": "Odłóż", "howto.holdTap": "Stuknij pole odłożenia",
     "howto.pick": "Wybierz cząsteczkę", "howto.move": "Przesuń", "howto.place": "Umieść",
+    "collection.title": "Cząsteczki",
   },
   ru: {
     subtitle: "Головоломка из полициклических ароматических блоков",
@@ -600,6 +613,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Кнопка ↻ под каждой молекулой поворачивает её на 60°.",
     "game.hold": "Резерв", "howto.holdTap": "Коснитесь поля резерва",
     "howto.pick": "Выбрать молекулу", "howto.move": "Переместить", "howto.place": "Поставить",
+    "collection.title": "Молекулы",
   },
   uk: {
     subtitle: "Головоломка з поліциклічних ароматичних блоків",
@@ -643,6 +657,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Кнопка ↻ під кожною молекулою повертає її на 60°.",
     "game.hold": "Резерв", "howto.holdTap": "Торкніться поля резерву",
     "howto.pick": "Вибрати молекулу", "howto.move": "Перемістити", "howto.place": "Поставити",
+    "collection.title": "Молекули",
   },
   fi: {
     subtitle: "Polysyklisten aromaattisten palikoiden pulmapeli",
@@ -686,6 +701,7 @@ const TRANSLATIONS = {
     "howto.placeRotate": "Jokaisen molekyylin alla oleva ↻-painike kääntää sitä 60°.",
     "game.hold": "Varasto", "howto.holdTap": "Napauta varastoruutua",
     "howto.pick": "Valitse molekyyli", "howto.move": "Siirrä", "howto.place": "Aseta",
+    "collection.title": "Molekyylit",
   },
 };
 

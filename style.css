@@ -307,6 +307,51 @@ h1 .subtitle {
   opacity: 1;
 }
 
+#collection {
+  background: var(--paper);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 14px 16px 16px;
+}
+
+#collection h2 {
+  margin: 0 0 10px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  text-align: center;
+}
+
+#collection-count {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+#collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 10px 6px;
+  justify-items: center;
+}
+
+.collection-tile {
+  text-align: center;
+  max-width: 88px;
+}
+
+.collection-name {
+  font-size: 0.64rem;
+  font-weight: 600;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.collection-formula {
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
+
 #difficulty-screen, #orientation-screen {
   display: flex;
   flex-direction: column;
