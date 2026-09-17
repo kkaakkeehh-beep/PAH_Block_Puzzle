@@ -95,6 +95,10 @@
   const orientationBackBtn = document.getElementById('orientation-back-btn');
   const orientationCards = document.querySelectorAll('#orientation-screen .difficulty-card');
   const difficultyBackBtn = document.getElementById('difficulty-back-btn');
+  const helpLeftTitle = document.getElementById('help-left-title');
+  const helpLeft = document.getElementById('help-left');
+  const helpRightTitle = document.getElementById('help-right-title');
+  const helpRight = document.getElementById('help-right');
   const difficultyCards = document.querySelectorAll('#difficulty-screen .difficulty-card');
 
   let screen = 'home';
@@ -585,8 +589,61 @@
     orientationScreen.classList.remove('hidden');
   }
 
+  // An entry is either [action, inputs] for a two-column row, or a plain
+  // string for a full-width note.
+  function fillHelpColumn(container, entries) {
+    container.textContent = '';
+    for (const entry of entries) {
+      const row = document.createElement('div');
+      if (typeof entry === 'string') {
+        row.className = 'help-note';
+        row.textContent = entry;
+      } else {
+        row.className = 'help-row';
+        const label = document.createElement('span');
+        label.className = 'help-label';
+        label.textContent = entry[0];
+        const keys = document.createElement('span');
+        keys.className = 'help-keys';
+        keys.textContent = entry[1];
+        row.append(label, keys);
+      }
+      container.appendChild(row);
+    }
+  }
+
+  // Shown on the difficulty screen, the last stop before play starts. The
+  // two modes are controlled so differently that one shared list would be
+  // mostly irrelevant to whichever mode you picked.
+  function renderControlsHelp(forMode) {
+    const move = t('controls.left') + ' / ' + t('controls.right');
+    if (forMode === 'fall') {
+      helpLeftTitle.textContent = t('howto.keyboard');
+      fillHelpColumn(helpLeft, [
+        [move, '←  →'],
+        [t('controls.rotate'), '↑  /  R'],
+        [t('controls.softDrop'), '↓'],
+        [t('controls.hardDrop'), 'Space  ·  ↓↓'],
+        [t('game.pause'), 'P'],
+      ]);
+      helpRightTitle.textContent = t('howto.touch');
+      fillHelpColumn(helpRight, [
+        [move, t('howto.swipe') + ' ←→  ·  ◀ ▶'],
+        [t('controls.rotate'), t('howto.swipe') + ' ↑  ·  ↻'],
+        [t('controls.softDrop'), '▼'],
+        [t('controls.hardDrop'), t('howto.swipe') + ' ↓  ·  ⤓  ·  ' + t('howto.doubleTap') + ' ▼'],
+      ]);
+    } else {
+      helpLeftTitle.textContent = t('howto.mouse');
+      fillHelpColumn(helpLeft, [t('howto.placeMouse'), t('howto.placeRotate')]);
+      helpRightTitle.textContent = t('howto.touch');
+      fillHelpColumn(helpRight, [t('howto.placeTouch'), t('howto.placeRotate')]);
+    }
+  }
+
   function showDifficultyScreen(desiredMode) {
     pendingMode = desiredMode;
+    renderControlsHelp(desiredMode);
     screen = 'difficulty';
     hideAllPreGameScreens();
     difficultyScreen.classList.remove('hidden');

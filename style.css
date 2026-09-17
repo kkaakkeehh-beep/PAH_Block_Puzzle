@@ -336,6 +336,65 @@ h1 .subtitle {
   line-height: 1.35;
 }
 
+#controls-help {
+  background: var(--paper);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 14px 18px;
+  width: 100%;
+  max-width: 620px;
+}
+
+#controls-help h2 {
+  margin: 0 0 10px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  text-align: center;
+}
+
+.controls-help-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+}
+
+.controls-help-col {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.controls-help-col h3 {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.help-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  padding: 2px 0;
+}
+
+.help-label { opacity: 0.75; }
+
+.help-keys {
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.help-note {
+  font-size: 0.78rem;
+  opacity: 0.75;
+  line-height: 1.45;
+  padding: 2px 0;
+}
+
 .text-back-btn {
   background: none;
   color: var(--ink);
