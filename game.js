@@ -252,7 +252,6 @@
       placePanel.appendChild(block);
       trayUi.push({ block, canvas, ctx: canvas.getContext('2d'), label, rotateBtn });
 
-      canvas.addEventListener('click', () => selectSlot(i));
       rotateBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const slot = tray[i];
@@ -261,12 +260,6 @@
         renderTray();
       });
     }
-  }
-
-  function selectSlot(i) {
-    if (!tray[i]) return;
-    selectedSlot = selectedSlot === i ? -1 : i;
-    renderTray();
   }
 
   function refillTrayIfEmpty() {
@@ -323,42 +316,79 @@
     return pixelToAxial(localX, localY, hexSize);
   }
 
-  function bindBoardPointerForPlacing() {
-    boardCanvas.addEventListener('mousemove', (e) => {
-      if (mode !== 'place' || selectedSlot < 0) { hoverAxial = null; return; }
-      hoverAxial = boardPointerToAxial(e.clientX, e.clientY);
-    });
-    boardCanvas.addEventListener('mouseleave', () => { hoverAxial = null; });
-    boardCanvas.addEventListener('click', (e) => {
-      if (mode !== 'place' || selectedSlot < 0 || !running || flashTimer > 0) return;
-      const [q, r] = boardPointerToAxial(e.clientX, e.clientY);
-      placeAt(selectedSlot, q, r);
+  // Press a tray piece and drag onto the board; the board-preview follows
+  // the pointer the whole way (via hoverAxial) so it's clear where it'll
+  // land even on touch, where there's no hover state to show it beforehand.
+  function bindTrayDragControls() {
+    let draggingSlot = -1;
+
+    function updateHoverFromEvent(e) {
+      const rect = boardCanvas.getBoundingClientRect();
+      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      hoverAxial = inside ? boardPointerToAxial(e.clientX, e.clientY) : null;
+    }
+
+    function endDrag(e) {
+      if (draggingSlot < 0) return;
+      const slot = draggingSlot;
+      draggingSlot = -1;
+      if (hoverAxial && running && flashTimer === 0) placeAt(slot, hoverAxial[0], hoverAxial[1]);
+      hoverAxial = null;
+      selectedSlot = -1;
+      renderTray();
+    }
+
+    trayUi.forEach((ui, i) => {
+      ui.canvas.addEventListener('pointerdown', (e) => {
+        if (!tray[i] || !running || flashTimer > 0) return;
+        draggingSlot = i;
+        selectedSlot = i;
+        renderTray();
+        try { ui.canvas.setPointerCapture(e.pointerId); } catch (err) { /* non-capturable pointer -- drag state above still holds */ }
+        updateHoverFromEvent(e);
+        e.preventDefault();
+      });
+      ui.canvas.addEventListener('pointermove', (e) => {
+        if (draggingSlot !== i) return;
+        updateHoverFromEvent(e);
+      });
+      ui.canvas.addEventListener('pointerup', (e) => {
+        if (draggingSlot !== i) return;
+        endDrag(e);
+      });
+      ui.canvas.addEventListener('pointercancel', () => {
+        if (draggingSlot !== i) return;
+        draggingSlot = -1;
+        hoverAxial = null;
+        selectedSlot = -1;
+        renderTray();
+      });
     });
   }
 
   function bindSwipeControls() {
     const SWIPE_MIN_DIST = 28;
-    let startX = 0, startY = 0, tracking = false;
+    let startX = 0, startY = 0, tracking = false, pointerId = null;
 
-    boardCanvas.addEventListener('touchstart', (e) => {
+    boardCanvas.addEventListener('pointerdown', (e) => {
       if (mode !== 'fall') return;
-      const t = e.changedTouches[0];
-      startX = t.clientX;
-      startY = t.clientY;
+      startX = e.clientX;
+      startY = e.clientY;
       tracking = true;
-    }, { passive: true });
+      pointerId = e.pointerId;
+      try { boardCanvas.setPointerCapture(pointerId); } catch (err) { /* non-capturable pointer -- drag state above still holds */ }
+    });
 
-    boardCanvas.addEventListener('touchmove', (e) => {
-      if (tracking && mode === 'fall') e.preventDefault();
+    boardCanvas.addEventListener('pointermove', (e) => {
+      if (tracking && e.pointerId === pointerId && mode === 'fall') e.preventDefault();
     }, { passive: false });
 
-    boardCanvas.addEventListener('touchend', (e) => {
-      if (!tracking) return;
+    boardCanvas.addEventListener('pointerup', (e) => {
+      if (!tracking || e.pointerId !== pointerId) return;
       tracking = false;
       if (mode !== 'fall' || !running || paused || !current) return;
-      const t = e.changedTouches[0];
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
       if (Math.abs(dx) < SWIPE_MIN_DIST && Math.abs(dy) < SWIPE_MIN_DIST) return;
       if (Math.abs(dx) > Math.abs(dy)) {
         tryMoveHorizontal(dx > 0 ? 1 : -1);
@@ -368,6 +398,8 @@
         hardDrop();
       }
     });
+
+    boardCanvas.addEventListener('pointercancel', () => { tracking = false; });
   }
 
   function renderTray() {
@@ -687,7 +719,7 @@
     });
 
     window.addEventListener('resize', () => computeBoardLayout(boardCanvas));
-    bindBoardPointerForPlacing();
+    bindTrayDragControls();
     bindSwipeControls();
   }
 
