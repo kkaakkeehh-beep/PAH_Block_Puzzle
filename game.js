@@ -330,25 +330,35 @@
   // or a drag gesture that just didn't register for some reason), it falls
   // back to the old tap-to-select-then-tap-the-board flow instead of
   // silently doing nothing, so there's always a working path.
+  // Dragging only ever *chooses* a cell (updates hoverAxial); it never
+  // places by itself. Placing always happens via a separate confirm tap on
+  // the board, and that tap uses whatever cell the drag already locked in
+  // -- it does not recompute a position from where the tap itself landed.
+  // This is deliberate: trying to place exactly on release/cancel turned
+  // out to be unreliable across real mobile browsers (drag-end events don't
+  // fire consistently), so instead the drag's only job is to show where it
+  // would go, and a plain, ordinary tap (the single most reliable gesture
+  // there is) confirms it there regardless of the tap's own precision.
+  //
+  // If there was no drag at all (a direct tap on the tray, then a tap on
+  // the board with no hoverAxial yet), the board tap's own coordinates are
+  // used instead, so a no-drag tap-then-tap flow still works.
   function bindTrayDragControls() {
     let draggingSlot = -1;
     let draggingPointerId = null;
 
     function updateHoverFromEvent(e) {
       const rect = boardCanvas.getBoundingClientRect();
-      const pad = 24; // release a little past the visual edge still counts
+      const pad = 24; // dragging a little past the visual edge still counts
       const inside = e.clientX >= rect.left - pad && e.clientX <= rect.right + pad && e.clientY >= rect.top - pad && e.clientY <= rect.bottom + pad;
       hoverAxial = inside ? boardPointerToAxial(e.clientX, e.clientY) : null;
     }
 
     function endDrag() {
       if (draggingSlot < 0) return;
-      const slot = draggingSlot;
+      selectedSlot = draggingSlot;
       draggingSlot = -1;
       draggingPointerId = null;
-      const placed = hoverAxial && running && flashTimer === 0 && placeAt(slot, hoverAxial[0], hoverAxial[1]);
-      if (!placed) selectedSlot = selectedSlot === slot ? -1 : slot;
-      hoverAxial = null;
       renderTray();
     }
 
@@ -362,9 +372,6 @@
       updateHoverFromEvent(e);
       endDrag();
     });
-    // Some mobile browsers fire cancel instead of up for a gesture they
-    // briefly considered ambiguous, even with touch-action: none -- still
-    // place at the last known position rather than just dropping the drag.
     window.addEventListener('pointercancel', (e) => {
       if (draggingSlot < 0 || e.pointerId !== draggingPointerId) return;
       endDrag();
@@ -375,13 +382,12 @@
         if (!tray[i] || !running || flashTimer > 0) return;
         draggingSlot = i;
         draggingPointerId = e.pointerId;
+        hoverAxial = null;
         updateHoverFromEvent(e);
         e.preventDefault();
       });
     });
 
-    // Fallback path: a slot tap-selected above (drag released short of the
-    // board) gets placed by a plain tap/click on the board.
     boardCanvas.addEventListener('pointermove', (e) => {
       if (mode !== 'place' || selectedSlot < 0 || draggingSlot >= 0) return;
       hoverAxial = boardPointerToAxial(e.clientX, e.clientY);
@@ -391,7 +397,7 @@
     });
     boardCanvas.addEventListener('click', (e) => {
       if (mode !== 'place' || selectedSlot < 0 || draggingSlot >= 0 || !running || flashTimer > 0) return;
-      const [q, r] = boardPointerToAxial(e.clientX, e.clientY);
+      const [q, r] = hoverAxial || boardPointerToAxial(e.clientX, e.clientY);
       placeAt(selectedSlot, q, r);
     });
   }
