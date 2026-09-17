@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PAH Block Puzzle</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>PAH Block Puzzle<span class="subtitle">多環芳香族ブロックパズル</span></h1>
+    <div class="scores">
+      <div class="score-box"><span class="label">Score</span><span id="score">0</span></div>
+      <div class="score-box"><span class="label">Best</span><span id="best-score">0</span></div>
+      <div class="score-box"><span class="label">Level</span><span id="level">1</span></div>
+    </div>
+  </header>
+
+  <div class="play-area">
+    <div class="board-wrap">
+      <canvas id="board-canvas"></canvas>
+    </div>
+    <aside id="side-panel">
+      <div class="panel-block">
+        <h2>Next</h2>
+        <canvas id="next-canvas"></canvas>
+        <div id="next-label" class="molecule-label"></div>
+      </div>
+      <div class="panel-block">
+        <h2>Falling</h2>
+        <div id="current-label" class="molecule-label"></div>
+      </div>
+      <button id="new-game-btn">New Game</button>
+    </aside>
+  </div>
+
+  <div id="touch-controls">
+    <button id="btn-left" aria-label="Left">◀</button>
+    <button id="btn-rotate" aria-label="Rotate">↻</button>
+    <button id="btn-right" aria-label="Right">▶</button>
+    <button id="btn-down" aria-label="Soft drop">▼</button>
+    <button id="btn-drop" aria-label="Hard drop">⤓</button>
+  </div>
+
+  <div id="game-over-overlay" class="hidden">
+    <div class="game-over-card">
+      <h2>Game Over</h2>
+      <p>Final score</p>
+      <p id="final-score">0</p>
+      <p id="new-best" class="hidden">New best score!</p>
+      <button id="restart-btn">New Game</button>
+    </div>
+  </div>
+</div>
+
+<script src="hexmath.js"></script>
+<script src="pieces.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
