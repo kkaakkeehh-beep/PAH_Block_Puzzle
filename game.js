@@ -806,6 +806,7 @@
 
     document.getElementById('new-game-btn').addEventListener('click', resetGame);
     document.getElementById('restart-btn').addEventListener('click', resetGame);
+    document.getElementById('game-over-home-btn').addEventListener('click', goHome);
     pauseBtn.addEventListener('click', () => setPaused(!paused));
     resumeBtn.addEventListener('click', () => setPaused(false));
     homeFallBtn.addEventListener('click', () => showOrientationScreen('fall'));

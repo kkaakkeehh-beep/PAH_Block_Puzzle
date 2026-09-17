@@ -528,6 +528,25 @@ button:active { transform: scale(0.95); }
 
 #share-copied-note.hidden { display: none; }
 
+.game-over-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.secondary-btn {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid rgba(127, 133, 140, 0.45);
+  opacity: 0.75;
+}
+
+.secondary-btn:hover {
+  background: transparent;
+  opacity: 1;
+}
+
 @media (max-width: 480px) {
   #side-panel {
     flex-direction: row;
