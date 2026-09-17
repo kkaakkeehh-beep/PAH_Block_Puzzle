@@ -49,8 +49,6 @@
   const fallPanel = document.getElementById('fall-panel');
   const placePanel = document.getElementById('place-panel');
   const touchControls = document.getElementById('touch-controls');
-  const modeFallBtn = document.getElementById('mode-fall-btn');
-  const modePlaceBtn = document.getElementById('mode-place-btn');
   const pauseBtn = document.getElementById('pause-btn');
   const pausedOverlay = document.getElementById('paused-overlay');
   const resumeBtn = document.getElementById('resume-btn');
@@ -350,8 +348,6 @@
   function setMode(newMode, force) {
     if (mode === newMode && !force) return;
     mode = newMode;
-    modeFallBtn.classList.toggle('active', mode === 'fall');
-    modePlaceBtn.classList.toggle('active', mode === 'place');
     fallPanel.classList.toggle('hidden', mode !== 'fall');
     placePanel.classList.toggle('hidden', mode !== 'place');
     touchControls.classList.toggle('hidden', mode !== 'fall');
@@ -554,8 +550,6 @@
 
     document.getElementById('new-game-btn').addEventListener('click', resetGame);
     document.getElementById('restart-btn').addEventListener('click', resetGame);
-    modeFallBtn.addEventListener('click', () => setMode('fall'));
-    modePlaceBtn.addEventListener('click', () => setMode('place'));
     pauseBtn.addEventListener('click', () => setPaused(!paused));
     resumeBtn.addEventListener('click', () => setPaused(false));
     orientFlatBtn.addEventListener('click', () => setFallOrientation('flat'));
