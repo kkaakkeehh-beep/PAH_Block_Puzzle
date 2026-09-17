@@ -226,7 +226,9 @@
   // share-intent URLs, so those are plain links.
   function setupShareButtons() {
     const text = t('share.message').replace('{score}', score) + '\n' + runDetailParts().join(' / ');
-    const url = location.href;
+    // Not location.href: that carries along whatever query string the page
+    // happens to have been opened with, and those end up in the shared link.
+    const url = location.origin + location.pathname;
     shareCopiedNote.classList.add('hidden');
 
     shareXBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url);

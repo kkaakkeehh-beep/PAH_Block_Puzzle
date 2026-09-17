@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- A single benzene ring drawn the way the game draws it: a filled
+       flat-top hexagon with a Kekule structure, three alternating double
+       bonds rather than a circle. -->
+  <rect width="64" height="64" rx="12" fill="#f4f1e8"/>
+  <polygon points="52,32 42,49.32 22,49.32 12,32 22,14.68 42,14.68"
+           fill="#e63946" stroke="#1d2126" stroke-width="3"/>
+  <g stroke="#fffdf7" stroke-width="3.4" stroke-linecap="round">
+    <line x1="43.2" y1="32" x2="36.4" y2="43.78"/>
+    <line x1="27.6" y1="43.78" x2="20.8" y2="32"/>
+    <line x1="24.2" y1="22.16" x2="37.8" y2="22.16"/>
+  </g>
+</svg>

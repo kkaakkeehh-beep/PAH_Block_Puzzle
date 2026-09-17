@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!-- Source for og.png. Not shipped as a page: rendered once by headless
+     Chrome (see the note in index.html) and committed as og.png. Kept in
+     the repo so the share image can be regenerated from the same Kekule
+     code the game itself draws with. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  html, body { margin: 0; padding: 0; background: #f4f1e8; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="og" width="1200" height="630"></canvas>
+<script src="hexmath.js"></script>
+<script src="pieces.js"></script>
+<script src="board.js"></script>
+<script>
+  setOrientation('flat');
+  const g = document.getElementById('og').getContext('2d');
+  g.fillStyle = '#f4f1e8';
+  g.fillRect(0, 0, 1200, 630);
+
+  function molecule(name, cx, cy, size) {
+    const shape = PAH_SHAPES.find(s => s.name === name);
+    const pts = shape.offsets.map(([q, r]) => axialToPixel(q, r, size));
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const ox = cx - (Math.min(...xs) + Math.max(...xs)) / 2;
+    const oy = cy - (Math.min(...ys) + Math.max(...ys)) / 2;
+    const bonds = kekuleBondsForCells(shape.offsets);
+    pts.forEach(([x, y], i) => {
+      drawHex(g, x + ox, y + oy, size * 0.94, shape.color, '#1d2126', 2.5);
+      drawDoubleBonds(g, x + ox, y + oy, size * 0.94, bonds[i], 'rgba(255,255,255,0.85)', 3);
+    });
+  }
+
+  molecule('Coronene', 905, 305, 60);
+  molecule('Pyrene', 668, 125, 38);
+  molecule('Phenanthrene', 690, 500, 38);
+  molecule('Benzene', 1088, 528, 28);
+
+  g.textAlign = 'left';
+  g.fillStyle = '#22262b';
+  g.font = '700 92px "Segoe UI", system-ui, sans-serif';
+  g.fillText('PAH Block', 90, 285);
+  g.fillText('Puzzle', 90, 385);
+  g.fillStyle = '#2a6f77';
+  g.font = '400 34px "Segoe UI", system-ui, sans-serif';
+  g.fillText('Polycyclic Aromatic Block Puzzle', 92, 448);
+</script>
+</body>
+</html>
