@@ -1,12 +1,11 @@
 (function () {
-  const NUM_COLS = 9;
-  const NUM_ROWS = 16;
-  const SPAWN_COL = Math.floor(NUM_COLS / 2);
   const SPAWN_ROW = 2;
+  const [SPAWN_Q, SPAWN_R] = offsetToAxial(Math.floor(NUM_COLS / 2), SPAWN_ROW);
   const BASE_DROP_MS = 800;
   const MIN_DROP_MS = 120;
   const LINES_PER_LEVEL = 8;
   const HIGH_SCORE_KEY = 'pahBlockPuzzleHighScore';
+  const TRAY_SIZE = 3;
 
   const boardCanvas = document.getElementById('board-canvas');
   const boardCtx = boardCanvas.getContext('2d');
@@ -15,63 +14,40 @@
   const scoreEl = document.getElementById('score');
   const bestScoreEl = document.getElementById('best-score');
   const levelEl = document.getElementById('level');
+  const levelBox = document.getElementById('level-box');
   const currentLabelEl = document.getElementById('current-label');
   const nextLabelEl = document.getElementById('next-label');
   const overlay = document.getElementById('game-over-overlay');
   const finalScoreEl = document.getElementById('final-score');
   const newBestEl = document.getElementById('new-best');
+  const fallPanel = document.getElementById('fall-panel');
+  const placePanel = document.getElementById('place-panel');
+  const touchControls = document.getElementById('touch-controls');
+  const modeFallBtn = document.getElementById('mode-fall-btn');
+  const modePlaceBtn = document.getElementById('mode-place-btn');
 
+  let mode = 'fall';
   let board = new Map(); // axialKey -> color
-  let current, next;
   let score = 0, level = 1, linesCleared = 0;
-  let dropIntervalMs = BASE_DROP_MS;
-  let dropAccumulator = 0;
-  let lastFrameTime = null;
   let gameOver = false;
   let running = false;
   let flashRows = [];
   let flashTimer = 0;
 
-  let hexSize = 20;
-  let originX = 0, originY = 0;
+  // fall-mode state
+  let current, next;
+  let dropIntervalMs = BASE_DROP_MS;
+  let dropAccumulator = 0;
+  let lastFrameTime = null;
 
-  function isInBounds(col, row) {
-    return col >= 0 && col < NUM_COLS && row >= 0 && row < NUM_ROWS;
-  }
+  // place-mode state
+  let tray = [];
+  let trayUi = [];
+  let selectedSlot = -1;
+  let hoverAxial = null;
 
-  function getPieceCells(piece) {
-    const [anchorQ, anchorR] = offsetToAxial(piece.anchorCol, piece.anchorRow);
-    return piece.shape.rotationStates[piece.rotationIndex].map(([dq, dr]) => [anchorQ + dq, anchorR + dr]);
-  }
-
-  function isValidPosition(piece) {
-    for (const [q, r] of getPieceCells(piece)) {
-      const [col, row] = axialToOffset(q, r);
-      if (!isInBounds(col, row)) return false;
-      if (board.has(axialKey(q, r))) return false;
-    }
-    return true;
-  }
-
-  function newFallingPiece(shapeSlot) {
-    return { shape: shapeSlot.shape, rotationIndex: 0, anchorCol: SPAWN_COL, anchorRow: SPAWN_ROW };
-  }
-
-  function resetGame() {
-    board = new Map();
-    score = 0;
-    level = 1;
-    linesCleared = 0;
-    dropIntervalMs = BASE_DROP_MS;
-    dropAccumulator = 0;
-    gameOver = false;
-    flashRows = [];
-    current = newFallingPiece(spawnPiece());
-    next = spawnPiece();
-    updateHud();
-    overlay.classList.add('hidden');
-    running = true;
-    lastFrameTime = null;
+  function getPieceCells(shape, rotationIndex, anchorQ, anchorR) {
+    return shape.rotationStates[rotationIndex].map(([dq, dr]) => [anchorQ + dq, anchorR + dr]);
   }
 
   function updateHud() {
@@ -79,48 +55,16 @@
     levelEl.textContent = level;
     const best = Number(localStorage.getItem(HIGH_SCORE_KEY) || 0);
     bestScoreEl.textContent = Math.max(best, score);
-    currentLabelEl.textContent = current ? `${current.shape.name} (${current.shape.formula})` : '';
-    nextLabelEl.textContent = next ? `${next.shape.name} (${next.shape.formula})` : '';
-  }
-
-  function tryMove(dCol, dRow) {
-    const trial = { ...current, anchorCol: current.anchorCol + dCol, anchorRow: current.anchorRow + dRow };
-    if (isValidPosition(trial)) {
-      current = trial;
-      return true;
+    if (mode === 'fall') {
+      currentLabelEl.textContent = current ? `${current.shape.name} (${current.shape.formula})` : '';
+      nextLabelEl.textContent = next ? `${next.shape.name} (${next.shape.formula})` : '';
     }
-    return false;
   }
 
-  const ROTATE_KICKS = [[0, 0], [1, 0], [-1, 0], [0, -1], [2, 0], [-2, 0]];
-
-  function tryRotate() {
-    const nextIndex = (current.rotationIndex + 1) % current.shape.rotationStates.length;
-    for (const [kc, kr] of ROTATE_KICKS) {
-      const trial = { ...current, rotationIndex: nextIndex, anchorCol: current.anchorCol + kc, anchorRow: current.anchorRow + kr };
-      if (isValidPosition(trial)) {
-        current = trial;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function hardDrop() {
-    let cells = 0;
-    while (tryMove(0, 1)) cells++;
-    score += cells * 2;
-    lockPiece();
-  }
-
-  function lockPiece() {
-    for (const [q, r] of getPieceCells(current)) {
-      board.set(axialKey(q, r), current.shape.color);
-    }
-    score += current.shape.rotationStates[0].length * 10;
-
-    const cleared = clearFullRows();
+  function applyLineClears() {
+    const { cleared, board: newBoard } = clearFullRows(board);
     if (cleared.length > 0) {
+      board = newBoard;
       flashRows = cleared;
       flashTimer = 220;
       linesCleared += cleared.length;
@@ -128,47 +72,10 @@
       const newLevel = 1 + Math.floor(linesCleared / LINES_PER_LEVEL);
       if (newLevel !== level) {
         level = newLevel;
-        dropIntervalMs = Math.max(MIN_DROP_MS, BASE_DROP_MS - (level - 1) * 60);
+        if (mode === 'fall') dropIntervalMs = Math.max(MIN_DROP_MS, BASE_DROP_MS - (level - 1) * 60);
       }
     }
-
-    current = next;
-    current.anchorCol = SPAWN_COL;
-    current.anchorRow = SPAWN_ROW;
-    next = spawnPiece();
-    updateHud();
-
-    if (!isValidPosition(current)) {
-      endGame();
-    }
-  }
-
-  function clearFullRows() {
-    const rowCols = new Map();
-    for (const key of board.keys()) {
-      const [q, r] = key.split(',').map(Number);
-      const [col, row] = axialToOffset(q, r);
-      if (!rowCols.has(row)) rowCols.set(row, new Set());
-      rowCols.get(row).add(col);
-    }
-    const fullRows = [];
-    for (const [row, cols] of rowCols) {
-      if (cols.size >= NUM_COLS) fullRows.push(row);
-    }
-    if (fullRows.length === 0) return [];
-    fullRows.sort((a, b) => a - b);
-
-    const newBoard = new Map();
-    for (const [key, color] of board) {
-      const [q, r] = key.split(',').map(Number);
-      const [col, row] = axialToOffset(q, r);
-      if (fullRows.includes(row)) continue;
-      const shift = fullRows.filter(cr => cr > row).length;
-      const [nq, nr] = offsetToAxial(col, row + shift);
-      newBoard.set(axialKey(nq, nr), color);
-    }
-    board = newBoard;
-    return fullRows;
+    return cleared.length;
   }
 
   function endGame() {
@@ -186,101 +93,281 @@
     overlay.classList.remove('hidden');
   }
 
-  function computeLayout() {
-    const rect = boardCanvas.parentElement.getBoundingClientRect();
-    const availW = Math.max(200, rect.width);
-    const sizeFromWidth = availW / (1.5 * (NUM_COLS - 1) + 2);
-    hexSize = Math.max(12, Math.min(28, sizeFromWidth));
+  // ---------- fall mode ----------
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (let col = 0; col < NUM_COLS; col++) {
-      for (let row = 0; row < NUM_ROWS; row++) {
-        const [q, r] = offsetToAxial(col, row);
-        const [cx, cy] = axialToPixel(q, r, hexSize);
-        for (let i = 0; i < 6; i++) {
-          const [px, py] = hexCorner(cx, cy, hexSize, i);
-          minX = Math.min(minX, px); maxX = Math.max(maxX, px);
-          minY = Math.min(minY, py); maxY = Math.max(maxY, py);
+  function newFallingPiece(shapeSlot) {
+    return { shape: shapeSlot.shape, rotationIndex: 0, anchorQ: SPAWN_Q, anchorR: SPAWN_R };
+  }
+
+  function fallCells(piece) {
+    return getPieceCells(piece.shape, piece.rotationIndex, piece.anchorQ, piece.anchorR);
+  }
+
+  function tryMoveHorizontal(dq) {
+    const trial = { ...current, anchorQ: current.anchorQ + dq };
+    if (canPlaceCells(board, fallCells(trial))) { current = trial; return true; }
+    return false;
+  }
+
+  function tryFall(piece) {
+    const [nq, nr] = fallStep(piece.anchorQ, piece.anchorR);
+    const trial = { ...piece, anchorQ: nq, anchorR: nr };
+    return canPlaceCells(board, fallCells(trial)) ? trial : null;
+  }
+
+  function tryMoveDown() {
+    const trial = tryFall(current);
+    if (trial) { current = trial; return true; }
+    return false;
+  }
+
+  const ROTATE_KICKS = [[0, 0], [1, 0], [-1, 0], [0, -1], [0, 1], [-1, 1], [1, -1]];
+
+  function tryRotate() {
+    const nextIndex = (current.rotationIndex + 1) % current.shape.rotationStates.length;
+    for (const [kq, kr] of ROTATE_KICKS) {
+      const trial = { ...current, rotationIndex: nextIndex, anchorQ: current.anchorQ + kq, anchorR: current.anchorR + kr };
+      if (canPlaceCells(board, fallCells(trial))) { current = trial; return true; }
+    }
+    return false;
+  }
+
+  function hardDrop() {
+    let cells = 0, trial;
+    while ((trial = tryFall(current))) { current = trial; cells++; }
+    score += cells * 2;
+    fallLockPiece();
+  }
+
+  function fallLockPiece() {
+    placeCells(board, fallCells(current), current.shape.color);
+    score += current.shape.rotationStates[0].length * 10;
+    applyLineClears();
+
+    current = next;
+    current.anchorQ = SPAWN_Q;
+    current.anchorR = SPAWN_R;
+    next = spawnPiece();
+    updateHud();
+
+    if (!canPlaceCells(board, fallCells(current))) endGame();
+  }
+
+  // ---------- place mode ----------
+
+  function buildPlacePanel() {
+    placePanel.innerHTML = '';
+    trayUi = [];
+    for (let i = 0; i < TRAY_SIZE; i++) {
+      const block = document.createElement('div');
+      block.className = 'panel-block tray-slot';
+      const canvas = document.createElement('canvas');
+      canvas.className = 'tray-canvas';
+      const label = document.createElement('div');
+      label.className = 'molecule-label';
+      const rotateBtn = document.createElement('button');
+      rotateBtn.textContent = '↻';
+      rotateBtn.className = 'tray-rotate-btn';
+      block.appendChild(canvas);
+      block.appendChild(label);
+      block.appendChild(rotateBtn);
+      placePanel.appendChild(block);
+      trayUi.push({ block, canvas, ctx: canvas.getContext('2d'), label, rotateBtn });
+
+      canvas.addEventListener('click', () => selectSlot(i));
+      rotateBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const slot = tray[i];
+        if (!slot) return;
+        slot.rotationIndex = (slot.rotationIndex + 1) % slot.shape.rotationStates.length;
+        renderTray();
+      });
+    }
+  }
+
+  function selectSlot(i) {
+    if (!tray[i]) return;
+    selectedSlot = selectedSlot === i ? -1 : i;
+    renderTray();
+  }
+
+  function refillTrayIfEmpty() {
+    if (tray.every(s => s === null)) {
+      tray = [spawnPiece(), spawnPiece(), spawnPiece()];
+      selectedSlot = -1;
+    }
+  }
+
+  function slotFitsAnywhere(slot) {
+    for (let ri = 0; ri < slot.shape.rotationStates.length; ri++) {
+      for (let col = 0; col < NUM_COLS; col++) {
+        for (let row = 0; row < NUM_ROWS; row++) {
+          const [aq, ar] = offsetToAxial(col, row);
+          const cells = getPieceCells(slot.shape, ri, aq, ar);
+          if (canPlaceCells(board, cells)) return true;
         }
       }
     }
-    const pad = 4;
-    originX = -minX + pad;
-    originY = -minY + pad;
-    const dpr = window.devicePixelRatio || 1;
-    const cssW = maxX - minX + pad * 2;
-    const cssH = maxY - minY + pad * 2;
-    boardCanvas.style.width = cssW + 'px';
-    boardCanvas.style.height = cssH + 'px';
-    boardCanvas.width = cssW * dpr;
-    boardCanvas.height = cssH * dpr;
-    boardCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return false;
   }
 
-  function drawHex(ctx, cx, cy, size, fillColor, strokeColor, lineWidth) {
-    ctx.beginPath();
-    for (let i = 0; i < 6; i++) {
-      const [px, py] = hexCorner(cx, cy, size, i);
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  function checkPlaceGameOver() {
+    const anyPresent = tray.some(s => s);
+    if (!anyPresent) return;
+    const anyFits = tray.some(s => s && slotFitsAnywhere(s));
+    if (!anyFits) endGame();
+  }
+
+  function placeAt(slotIndex, anchorQ, anchorR) {
+    const slot = tray[slotIndex];
+    if (!slot) return false;
+    const cells = getPieceCells(slot.shape, slot.rotationIndex, anchorQ, anchorR);
+    if (!canPlaceCells(board, cells)) return false;
+    placeCells(board, cells, slot.shape.color);
+    score += cells.length * 10;
+    applyLineClears();
+    tray[slotIndex] = null;
+    selectedSlot = -1;
+    refillTrayIfEmpty();
+    updateHud();
+    checkPlaceGameOver();
+    renderTray();
+    return true;
+  }
+
+  function boardPointerToAxial(clientX, clientY) {
+    const rect = boardCanvas.getBoundingClientRect();
+    const localX = clientX - rect.left - originX;
+    const localY = clientY - rect.top - originY;
+    return pixelToAxial(localX, localY, hexSize);
+  }
+
+  function bindBoardPointerForPlacing() {
+    boardCanvas.addEventListener('mousemove', (e) => {
+      if (mode !== 'place' || selectedSlot < 0) { hoverAxial = null; return; }
+      hoverAxial = boardPointerToAxial(e.clientX, e.clientY);
+    });
+    boardCanvas.addEventListener('mouseleave', () => { hoverAxial = null; });
+    boardCanvas.addEventListener('click', (e) => {
+      if (mode !== 'place' || selectedSlot < 0 || !running) return;
+      const [q, r] = boardPointerToAxial(e.clientX, e.clientY);
+      placeAt(selectedSlot, q, r);
+    });
+  }
+
+  function renderTray() {
+    if (mode !== 'place') return;
+    tray.forEach((slot, i) => {
+      const ui = trayUi[i];
+      ui.block.classList.toggle('selected', selectedSlot === i);
+      ui.block.classList.toggle('empty', !slot);
+      ui.canvas.width = ui.canvas.height = 0;
+      const cssSize = 90;
+      const dpr = window.devicePixelRatio || 1;
+      ui.canvas.width = cssSize * dpr;
+      ui.canvas.height = cssSize * dpr;
+      ui.canvas.style.width = cssSize + 'px';
+      ui.canvas.style.height = cssSize + 'px';
+      ui.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ui.ctx.clearRect(0, 0, cssSize, cssSize);
+      ui.label.textContent = slot ? `${slot.shape.name} (${slot.shape.formula})` : '';
+      if (!slot) return;
+      const size = 13;
+      const offsets = slot.shape.rotationStates[slot.rotationIndex];
+      const pts = offsets.map(([q, r]) => axialToPixel(q, r, size));
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const [x, y] of pts) {
+        minX = Math.min(minX, x - size); maxX = Math.max(maxX, x + size);
+        minY = Math.min(minY, y - size); maxY = Math.max(maxY, y + size);
+      }
+      const cx0 = (cssSize - (maxX - minX)) / 2 - minX;
+      const cy0 = (cssSize - (maxY - minY)) / 2 - minY;
+      pts.forEach(([x, y]) => {
+        drawHex(ui.ctx, x + cx0, y + cy0, size * 0.92, slot.shape.color, '#1d2126', 1.5);
+        drawRingMark(ui.ctx, x + cx0, y + cy0, size, 'rgba(255,255,255,0.7)');
+      });
+    });
+  }
+
+  // ---------- mode switching / reset ----------
+
+  function setMode(newMode) {
+    if (mode === newMode) return;
+    mode = newMode;
+    modeFallBtn.classList.toggle('active', mode === 'fall');
+    modePlaceBtn.classList.toggle('active', mode === 'place');
+    fallPanel.classList.toggle('hidden', mode !== 'fall');
+    placePanel.classList.toggle('hidden', mode !== 'place');
+    touchControls.classList.toggle('hidden', mode !== 'fall');
+    levelBox.classList.toggle('hidden', mode !== 'fall');
+    resetGame();
+  }
+
+  function resetGame() {
+    board = new Map();
+    score = 0;
+    level = 1;
+    linesCleared = 0;
+    gameOver = false;
+    flashRows = [];
+    flashTimer = 0;
+    overlay.classList.add('hidden');
+    running = true;
+    selectedSlot = -1;
+    hoverAxial = null;
+
+    if (mode === 'fall') {
+      dropIntervalMs = BASE_DROP_MS;
+      dropAccumulator = 0;
+      lastFrameTime = null;
+      current = newFallingPiece(spawnPiece());
+      next = spawnPiece();
+    } else {
+      tray = [null, null, null];
+      refillTrayIfEmpty();
+      renderTray();
     }
-    ctx.closePath();
-    if (fillColor) { ctx.fillStyle = fillColor; ctx.fill(); }
-    if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = lineWidth || 1; ctx.stroke(); }
+    updateHud();
   }
 
-  function cellCenter(col, row) {
-    const [q, r] = offsetToAxial(col, row);
-    const [x, y] = axialToPixel(q, r, hexSize);
-    return [x + originX, y + originY];
-  }
+  // ---------- rendering ----------
 
   function render() {
     boardCtx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
-
-    for (let col = 0; col < NUM_COLS; col++) {
-      for (let row = 0; row < NUM_ROWS; row++) {
-        const [cx, cy] = cellCenter(col, row);
-        drawHex(boardCtx, cx, cy, hexSize * 0.96, 'rgba(255,255,255,0.35)', 'rgba(60,70,90,0.18)', 1);
-      }
-    }
+    drawBoardGrid(boardCtx);
 
     const flashSet = new Set(flashRows);
-    for (const [key, color] of board) {
-      const [q, r] = key.split(',').map(Number);
-      const [col, row] = axialToOffset(q, r);
-      const [cx, cy] = cellCenter(col, row);
-      const lit = flashSet.has(row) && flashTimer > 0;
-      drawHex(boardCtx, cx, cy, hexSize * 0.94, lit ? '#ffffff' : color, 'rgba(0,0,0,0.25)', 1.5);
-      if (!lit) {
-        boardCtx.beginPath();
-        boardCtx.arc(cx, cy, hexSize * 0.42, 0, Math.PI * 2);
-        boardCtx.strokeStyle = 'rgba(255,255,255,0.55)';
-        boardCtx.lineWidth = Math.max(1, hexSize * 0.06);
-        boardCtx.stroke();
-      }
-    }
+    drawLockedCells(boardCtx, board, flashSet, flashTimer > 0);
 
-    if (running && current) {
-      let ghost = { ...current };
-      while (isValidPosition({ ...ghost, anchorRow: ghost.anchorRow + 1 })) ghost = { ...ghost, anchorRow: ghost.anchorRow + 1 };
-      for (const [q, r] of getPieceCells(ghost)) {
+    if (mode === 'fall' && running && current) {
+      let ghost = current, step;
+      while ((step = tryFall(ghost))) ghost = step;
+      for (const [q, r] of fallCells(ghost)) {
         const [col, row] = axialToOffset(q, r);
         const [cx, cy] = cellCenter(col, row);
         drawHex(boardCtx, cx, cy, hexSize * 0.9, 'rgba(255,255,255,0.12)', current.shape.color, 1.5);
       }
-      for (const [q, r] of getPieceCells(current)) {
+      for (const [q, r] of fallCells(current)) {
         const [col, row] = axialToOffset(q, r);
         const [cx, cy] = cellCenter(col, row);
         drawHex(boardCtx, cx, cy, hexSize * 0.94, current.shape.color, '#1d2126', 2);
-        boardCtx.beginPath();
-        boardCtx.arc(cx, cy, hexSize * 0.42, 0, Math.PI * 2);
-        boardCtx.strokeStyle = 'rgba(255,255,255,0.7)';
-        boardCtx.lineWidth = Math.max(1, hexSize * 0.06);
-        boardCtx.stroke();
+        drawRingMark(boardCtx, cx, cy, hexSize, 'rgba(255,255,255,0.7)');
       }
+      renderNextPreview();
     }
 
-    renderNextPreview();
+    if (mode === 'place' && running && selectedSlot >= 0 && hoverAxial) {
+      const slot = tray[selectedSlot];
+      if (slot) {
+        const cells = getPieceCells(slot.shape, slot.rotationIndex, hoverAxial[0], hoverAxial[1]);
+        const valid = canPlaceCells(board, cells);
+        for (const [q, r] of cells) {
+          const [col, row] = axialToOffset(q, r);
+          const [cx, cy] = cellCenter(col, row);
+          drawHex(boardCtx, cx, cy, hexSize * 0.94, valid ? slot.shape.color : 'rgba(220,60,60,0.55)', valid ? '#1d2126' : '#7a1f1f', 2);
+        }
+      }
+    }
   }
 
   function renderNextPreview() {
@@ -305,11 +392,7 @@
     const cy0 = (cssSize - (maxY - minY)) / 2 - minY;
     pts.forEach(([x, y]) => {
       drawHex(nextCtx, x + cx0, y + cy0, size * 0.92, next.shape.color, '#1d2126', 1.5);
-      nextCtx.beginPath();
-      nextCtx.arc(x + cx0, y + cy0, size * 0.4, 0, Math.PI * 2);
-      nextCtx.strokeStyle = 'rgba(255,255,255,0.7)';
-      nextCtx.lineWidth = 1;
-      nextCtx.stroke();
+      drawRingMark(nextCtx, x + cx0, y + cy0, size, 'rgba(255,255,255,0.7)');
     });
   }
 
@@ -323,11 +406,11 @@
       if (flashTimer <= 0) flashRows = [];
     }
 
-    if (running && !document.hidden) {
+    if (mode === 'fall' && running && !document.hidden) {
       dropAccumulator += dt;
       if (dropAccumulator >= dropIntervalMs) {
         dropAccumulator = 0;
-        if (!tryMove(0, 1)) lockPiece();
+        if (!tryMoveDown()) fallLockPiece();
       }
     }
 
@@ -337,30 +420,34 @@
 
   function bindControls() {
     window.addEventListener('keydown', (e) => {
-      if (!running) return;
+      if (mode !== 'fall' || !running) return;
       switch (e.key) {
-        case 'ArrowLeft': tryMove(-1, 0); e.preventDefault(); break;
-        case 'ArrowRight': tryMove(1, 0); e.preventDefault(); break;
-        case 'ArrowDown': if (!tryMove(0, 1)) lockPiece(); e.preventDefault(); break;
+        case 'ArrowLeft': tryMoveHorizontal(-1); e.preventDefault(); break;
+        case 'ArrowRight': tryMoveHorizontal(1); e.preventDefault(); break;
+        case 'ArrowDown': if (!tryMoveDown()) fallLockPiece(); e.preventDefault(); break;
         case 'ArrowUp': case 'r': case 'R': tryRotate(); e.preventDefault(); break;
         case ' ': hardDrop(); e.preventDefault(); break;
       }
     });
 
-    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (running) fn(); });
-    bind('btn-left', () => tryMove(-1, 0));
-    bind('btn-right', () => tryMove(1, 0));
-    bind('btn-down', () => { if (!tryMove(0, 1)) lockPiece(); });
+    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (mode === 'fall' && running) fn(); });
+    bind('btn-left', () => tryMoveHorizontal(-1));
+    bind('btn-right', () => tryMoveHorizontal(1));
+    bind('btn-down', () => { if (!tryMoveDown()) fallLockPiece(); });
     bind('btn-rotate', tryRotate);
     bind('btn-drop', hardDrop);
 
     document.getElementById('new-game-btn').addEventListener('click', resetGame);
     document.getElementById('restart-btn').addEventListener('click', resetGame);
+    modeFallBtn.addEventListener('click', () => setMode('fall'));
+    modePlaceBtn.addEventListener('click', () => setMode('place'));
 
-    window.addEventListener('resize', computeLayout);
+    window.addEventListener('resize', () => computeBoardLayout(boardCanvas));
+    bindBoardPointerForPlacing();
   }
 
-  computeLayout();
+  buildPlacePanel();
+  computeBoardLayout(boardCanvas);
   bindControls();
   resetGame();
   requestAnimationFrame(tick);

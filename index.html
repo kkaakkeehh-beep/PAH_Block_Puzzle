@@ -13,24 +13,32 @@
     <div class="scores">
       <div class="score-box"><span class="label">Score</span><span id="score">0</span></div>
       <div class="score-box"><span class="label">Best</span><span id="best-score">0</span></div>
-      <div class="score-box"><span class="label">Level</span><span id="level">1</span></div>
+      <div class="score-box" id="level-box"><span class="label">Level</span><span id="level">1</span></div>
     </div>
   </header>
+
+  <div id="mode-toggle" role="tablist">
+    <button id="mode-fall-btn" class="mode-btn active" role="tab">Falling</button>
+    <button id="mode-place-btn" class="mode-btn" role="tab">Placing</button>
+  </div>
 
   <div class="play-area">
     <div class="board-wrap">
       <canvas id="board-canvas"></canvas>
     </div>
     <aside id="side-panel">
-      <div class="panel-block">
-        <h2>Next</h2>
-        <canvas id="next-canvas"></canvas>
-        <div id="next-label" class="molecule-label"></div>
+      <div id="fall-panel">
+        <div class="panel-block">
+          <h2>Next</h2>
+          <canvas id="next-canvas"></canvas>
+          <div id="next-label" class="molecule-label"></div>
+        </div>
+        <div class="panel-block">
+          <h2>Falling</h2>
+          <div id="current-label" class="molecule-label"></div>
+        </div>
       </div>
-      <div class="panel-block">
-        <h2>Falling</h2>
-        <div id="current-label" class="molecule-label"></div>
-      </div>
+      <div id="place-panel" class="hidden"></div>
       <button id="new-game-btn">New Game</button>
     </aside>
   </div>
@@ -56,6 +64,7 @@
 
 <script src="hexmath.js"></script>
 <script src="pieces.js"></script>
+<script src="board.js"></script>
 <script src="game.js"></script>
 </body>
 </html>

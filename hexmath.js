@@ -1,6 +1,6 @@
 // Flat-top hexagons: horizontal top/bottom edges, so axial neighbor (0,+1) is
-// exactly straight down in pixel space. That's what lets pieces fall in a
-// straight vertical column, like Tetris.
+// exactly straight down in pixel space with zero horizontal drift. That's
+// what lets pieces fall in a perfectly straight vertical column, like Tetris.
 const SQRT3 = Math.sqrt(3);
 
 function axialKey(q, r) {
@@ -13,14 +13,18 @@ function axialRotate60(offset) {
 }
 
 // Columns share a straight visual line, but adjacent columns are staggered by
-// half a row (normal hex packing) — offset "row" bakes that stagger in so a
-// piece can move left/right/down with simple +/-1 steps.
+// half a row (normal hex packing) — offset "row" bakes that stagger in so
+// board bounds / line-clear can treat it as a plain rectangular grid.
 function axialToOffset(q, r) {
   return [q, r + Math.floor(q / 2)];
 }
 
 function offsetToAxial(col, row) {
   return [col, row - Math.floor(col / 2)];
+}
+
+function fallStep(q, r) {
+  return [q, r + 1];
 }
 
 function axialToPixel(q, r, size) {

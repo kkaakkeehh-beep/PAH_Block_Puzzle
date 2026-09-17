@@ -151,6 +151,65 @@ h1 .subtitle {
   min-height: 1.2em;
 }
 
+#mode-toggle {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.mode-btn {
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 0.55;
+  box-shadow: var(--shadow);
+}
+
+.mode-btn.active {
+  background: var(--accent);
+  color: #fff;
+  opacity: 1;
+}
+
+#place-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#place-panel.hidden { display: none; }
+#fall-panel.hidden { display: none; }
+#level-box.hidden { display: none; }
+#touch-controls.hidden { display: none; }
+
+.tray-slot {
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 4px;
+  transition: border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.tray-slot.selected {
+  border-color: var(--accent);
+}
+
+.tray-slot.empty {
+  opacity: 0.25;
+}
+
+.tray-canvas {
+  display: block;
+  margin: 0 auto;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.tray-rotate-btn {
+  display: block;
+  margin: 4px auto 0;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+}
+
 button {
   font-family: inherit;
   cursor: pointer;
