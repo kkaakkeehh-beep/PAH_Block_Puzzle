@@ -336,6 +336,40 @@
     });
   }
 
+  function bindSwipeControls() {
+    const SWIPE_MIN_DIST = 28;
+    let startX = 0, startY = 0, tracking = false;
+
+    boardCanvas.addEventListener('touchstart', (e) => {
+      if (mode !== 'fall') return;
+      const t = e.changedTouches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      tracking = true;
+    }, { passive: true });
+
+    boardCanvas.addEventListener('touchmove', (e) => {
+      if (tracking && mode === 'fall') e.preventDefault();
+    }, { passive: false });
+
+    boardCanvas.addEventListener('touchend', (e) => {
+      if (!tracking) return;
+      tracking = false;
+      if (mode !== 'fall' || !running || paused || !current) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      if (Math.abs(dx) < SWIPE_MIN_DIST && Math.abs(dy) < SWIPE_MIN_DIST) return;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        tryMoveHorizontal(dx > 0 ? 1 : -1);
+      } else if (dy < 0) {
+        tryRotate();
+      } else {
+        hardDrop();
+      }
+    });
+  }
+
   function renderTray() {
     if (mode !== 'place') return;
     tray.forEach((slot, i) => {
@@ -654,6 +688,7 @@
 
     window.addEventListener('resize', () => computeBoardLayout(boardCanvas));
     bindBoardPointerForPlacing();
+    bindSwipeControls();
   }
 
   // One-time migration: seed both per-mode bests from the old shared one so

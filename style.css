@@ -118,7 +118,7 @@ h1 .subtitle {
 #board-canvas {
   display: block;
   max-width: 100%;
-  touch-action: manipulation;
+  touch-action: none;
 }
 
 #side-panel {
