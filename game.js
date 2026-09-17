@@ -2,8 +2,30 @@
   const FALL_COLS = 7, FALL_ROWS = 14;
   const PLACE_COLS = 7, PLACE_ROWS = 9;
   const SPAWN_ROW = 2;
-  function spawnAxial() {
-    return offsetToAxial(Math.floor(FALL_COLS / 2), SPAWN_ROW);
+  // Centers the piece's own bounding width, not just a fixed column -- a
+  // fixed center column overflows the board for wide pieces (e.g. Pentacene
+  // is 5 cells wide), which made them invalid the instant they spawned and
+  // falsely triggered game over.
+  //
+  // The row is then the highest (smallest-index) one where every cell of the
+  // piece still lands at row >= 0, rather than a fixed SPAWN_ROW -- a fixed
+  // row leaves almost no buffer above a moderately tall stack, so a column
+  // near the spawn point could block new pieces well before the board was
+  // actually full.
+  function spawnAxial(shape) {
+    const offsets = shape.rotationStates[0];
+    const dqs = offsets.map(([dq]) => dq);
+    const minDq = Math.min(...dqs), maxDq = Math.max(...dqs);
+    const width = maxDq - minDq + 1;
+    let col = Math.floor((NUM_COLS - width) / 2) - minDq;
+    col = Math.max(-minDq, Math.min(col, NUM_COLS - 1 - maxDq));
+
+    for (let row = 0; row <= SPAWN_ROW + 4; row++) {
+      const [aq, ar] = offsetToAxial(col, row);
+      const rows = offsets.map(([dq, dr]) => axialToOffset(aq + dq, ar + dr)[1]);
+      if (Math.min(...rows) >= 0) return [aq, ar];
+    }
+    return offsetToAxial(col, SPAWN_ROW);
   }
   const BASE_DROP_MS = 800;
   const MIN_DROP_MS = 120;
@@ -119,7 +141,7 @@
   // ---------- fall mode ----------
 
   function newFallingPiece(shapeSlot) {
-    const [q, r] = spawnAxial();
+    const [q, r] = spawnAxial(shapeSlot.shape);
     return { shape: shapeSlot.shape, rotationIndex: 0, anchorQ: q, anchorR: r };
   }
 
@@ -171,7 +193,7 @@
 
     applyLineClears(() => {
       current = next;
-      [current.anchorQ, current.anchorR] = spawnAxial();
+      [current.anchorQ, current.anchorR] = spawnAxial(current.shape);
       next = spawnPiece();
       updateHud();
       if (!canPlaceCells(board, fallCells(current))) endGame();
