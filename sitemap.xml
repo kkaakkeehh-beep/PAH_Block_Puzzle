@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A sitemap may only list URLs at or below its own path, which is why this
+     lives in the project folder rather than at the domain root: the site is
+     served from https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/, a
+     subdirectory of a shared github.io host. Submit it in Search Console. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
