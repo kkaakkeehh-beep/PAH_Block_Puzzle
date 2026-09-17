@@ -177,6 +177,14 @@ h1 .subtitle {
 
 #home-screen.hidden { display: none; }
 
+#home-hero {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  height: auto;
+}
+
 .home-tagline {
   text-align: center;
   margin: 0;
