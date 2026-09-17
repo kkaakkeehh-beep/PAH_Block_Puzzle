@@ -2,7 +2,9 @@
   const FALL_COLS = 7, FALL_ROWS = 14;
   const PLACE_COLS = 7, PLACE_ROWS = 9;
   const SPAWN_ROW = 2;
-  const [SPAWN_Q, SPAWN_R] = offsetToAxial(Math.floor(FALL_COLS / 2), SPAWN_ROW);
+  function spawnAxial() {
+    return offsetToAxial(Math.floor(FALL_COLS / 2), SPAWN_ROW);
+  }
   const BASE_DROP_MS = 800;
   const MIN_DROP_MS = 120;
   const LINES_PER_LEVEL = 8;
@@ -30,8 +32,12 @@
   const pauseBtn = document.getElementById('pause-btn');
   const pausedOverlay = document.getElementById('paused-overlay');
   const resumeBtn = document.getElementById('resume-btn');
+  const orientationToggle = document.getElementById('orientation-toggle');
+  const orientFlatBtn = document.getElementById('orient-flat-btn');
+  const orientPointyBtn = document.getElementById('orient-pointy-btn');
 
   let mode = 'fall';
+  let fallOrientation = 'flat';
   let board = new Map(); // axialKey -> color
   let score = 0, level = 1, linesCleared = 0;
   let gameOver = false;
@@ -113,7 +119,8 @@
   // ---------- fall mode ----------
 
   function newFallingPiece(shapeSlot) {
-    return { shape: shapeSlot.shape, rotationIndex: 0, anchorQ: SPAWN_Q, anchorR: SPAWN_R };
+    const [q, r] = spawnAxial();
+    return { shape: shapeSlot.shape, rotationIndex: 0, anchorQ: q, anchorR: r };
   }
 
   function fallCells(piece) {
@@ -164,8 +171,7 @@
 
     applyLineClears(() => {
       current = next;
-      current.anchorQ = SPAWN_Q;
-      current.anchorR = SPAWN_R;
+      [current.anchorQ, current.anchorR] = spawnAxial();
       next = spawnPiece();
       updateHud();
       if (!canPlaceCells(board, fallCells(current))) endGame();
@@ -323,9 +329,24 @@
     touchControls.classList.toggle('hidden', mode !== 'fall');
     levelBox.classList.toggle('hidden', mode !== 'fall');
     pauseBtn.classList.toggle('hidden', mode !== 'fall');
+    orientationToggle.classList.toggle('hidden', mode !== 'fall');
+    // Placing mode's click-to-place math only works for flat-top hexes.
+    setOrientation(mode === 'fall' ? fallOrientation : 'flat');
     setBoardSize(mode === 'fall' ? FALL_COLS : PLACE_COLS, mode === 'fall' ? FALL_ROWS : PLACE_ROWS);
     computeBoardLayout(boardCanvas);
     resetGame();
+  }
+
+  function setFallOrientation(o) {
+    if (fallOrientation === o) return;
+    fallOrientation = o;
+    orientFlatBtn.classList.toggle('active', o === 'flat');
+    orientPointyBtn.classList.toggle('active', o === 'pointy');
+    if (mode === 'fall') {
+      setOrientation(o);
+      computeBoardLayout(boardCanvas);
+      resetGame();
+    }
   }
 
   function setPaused(value) {
@@ -493,12 +514,15 @@
     modePlaceBtn.addEventListener('click', () => setMode('place'));
     pauseBtn.addEventListener('click', () => setPaused(!paused));
     resumeBtn.addEventListener('click', () => setPaused(false));
+    orientFlatBtn.addEventListener('click', () => setFallOrientation('flat'));
+    orientPointyBtn.addEventListener('click', () => setFallOrientation('pointy'));
 
     window.addEventListener('resize', () => computeBoardLayout(boardCanvas));
     bindBoardPointerForPlacing();
   }
 
   buildPlacePanel();
+  setOrientation(fallOrientation);
   setBoardSize(FALL_COLS, FALL_ROWS);
   computeBoardLayout(boardCanvas);
   bindControls();
