@@ -359,14 +359,15 @@
     }, { passive: false });
     window.addEventListener('pointerup', (e) => {
       if (draggingSlot < 0 || e.pointerId !== draggingPointerId) return;
+      updateHoverFromEvent(e);
       endDrag();
     });
+    // Some mobile browsers fire cancel instead of up for a gesture they
+    // briefly considered ambiguous, even with touch-action: none -- still
+    // place at the last known position rather than just dropping the drag.
     window.addEventListener('pointercancel', (e) => {
       if (draggingSlot < 0 || e.pointerId !== draggingPointerId) return;
-      draggingSlot = -1;
-      draggingPointerId = null;
-      hoverAxial = null;
-      renderTray();
+      endDrag();
     });
 
     trayUi.forEach((ui, i) => {
