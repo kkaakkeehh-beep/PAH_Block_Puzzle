@@ -37,6 +37,10 @@
   let paused = false;
   let flashRows = [];
   let flashTimer = 0;
+  const CLEAR_FLASH_MS = 480;
+  const BLINK_INTERVAL_MS = 100;
+  let pendingClearBoard = null;
+  let pendingClearCallback = null;
 
   // fall-mode state
   let current, next;
@@ -67,21 +71,26 @@
     }
   }
 
-  function applyLineClears() {
+  // Cleared rows blink in place for CLEAR_FLASH_MS before actually being
+  // removed from the board -- afterClear runs once that removal happens.
+  function applyLineClears(afterClear) {
     const { cleared, board: newBoard } = clearFullRows(board);
-    if (cleared.length > 0) {
-      board = newBoard;
-      flashRows = cleared;
-      flashTimer = 220;
-      linesCleared += cleared.length;
-      score += 100 * cleared.length * cleared.length * level;
-      const newLevel = 1 + Math.floor(linesCleared / LINES_PER_LEVEL);
-      if (newLevel !== level) {
-        level = newLevel;
-        if (mode === 'fall') dropIntervalMs = Math.max(MIN_DROP_MS, BASE_DROP_MS - (level - 1) * 60);
-      }
+    if (cleared.length === 0) {
+      afterClear();
+      return;
     }
-    return cleared.length;
+    linesCleared += cleared.length;
+    score += 100 * cleared.length * cleared.length * level;
+    const newLevel = 1 + Math.floor(linesCleared / LINES_PER_LEVEL);
+    if (newLevel !== level) {
+      level = newLevel;
+      if (mode === 'fall') dropIntervalMs = Math.max(MIN_DROP_MS, BASE_DROP_MS - (level - 1) * 60);
+    }
+    updateHud();
+    flashRows = cleared;
+    flashTimer = CLEAR_FLASH_MS;
+    pendingClearBoard = newBoard;
+    pendingClearCallback = afterClear;
   }
 
   function endGame() {
@@ -148,15 +157,17 @@
   function fallLockPiece() {
     placeCells(board, fallCells(current), current.shape.color);
     score += current.shape.rotationStates[0].length * 10;
-    applyLineClears();
-
-    current = next;
-    current.anchorQ = SPAWN_Q;
-    current.anchorR = SPAWN_R;
-    next = spawnPiece();
+    current = null;
     updateHud();
 
-    if (!canPlaceCells(board, fallCells(current))) endGame();
+    applyLineClears(() => {
+      current = next;
+      current.anchorQ = SPAWN_Q;
+      current.anchorR = SPAWN_R;
+      next = spawnPiece();
+      updateHud();
+      if (!canPlaceCells(board, fallCells(current))) endGame();
+    });
   }
 
   // ---------- place mode ----------
@@ -231,13 +242,16 @@
     if (!canPlaceCells(board, cells)) return false;
     placeCells(board, cells, slot.shape.color);
     score += cells.length * 10;
-    applyLineClears();
     tray[slotIndex] = null;
     selectedSlot = -1;
-    refillTrayIfEmpty();
     updateHud();
-    checkPlaceGameOver();
     renderTray();
+
+    applyLineClears(() => {
+      refillTrayIfEmpty();
+      checkPlaceGameOver();
+      renderTray();
+    });
     return true;
   }
 
@@ -255,7 +269,7 @@
     });
     boardCanvas.addEventListener('mouseleave', () => { hoverAxial = null; });
     boardCanvas.addEventListener('click', (e) => {
-      if (mode !== 'place' || selectedSlot < 0 || !running) return;
+      if (mode !== 'place' || selectedSlot < 0 || !running || flashTimer > 0) return;
       const [q, r] = boardPointerToAxial(e.clientX, e.clientY);
       placeAt(selectedSlot, q, r);
     });
@@ -325,6 +339,8 @@
     gameOver = false;
     flashRows = [];
     flashTimer = 0;
+    pendingClearBoard = null;
+    pendingClearCallback = null;
     overlay.classList.add('hidden');
     running = true;
     paused = false;
@@ -354,7 +370,8 @@
     drawBoardGrid(boardCtx);
 
     const flashSet = new Set(flashRows);
-    drawLockedCells(boardCtx, board, flashSet, flashTimer > 0);
+    const blinkOn = flashTimer > 0 && Math.floor((CLEAR_FLASH_MS - flashTimer) / BLINK_INTERVAL_MS) % 2 === 0;
+    drawLockedCells(boardCtx, board, flashSet, blinkOn);
 
     if (mode === 'fall' && running && current) {
       let ghost = current, step;
@@ -420,12 +437,22 @@
 
     if (flashTimer > 0) {
       flashTimer -= dt;
-      if (flashTimer <= 0) flashRows = [];
+      if (flashTimer <= 0) {
+        flashRows = [];
+        flashTimer = 0;
+        if (pendingClearBoard) {
+          board = pendingClearBoard;
+          pendingClearBoard = null;
+          const cb = pendingClearCallback;
+          pendingClearCallback = null;
+          if (cb) cb();
+        }
+      }
     }
 
     if (mode === 'fall' && running && !paused && !document.hidden) {
       dropAccumulator += dt;
-      if (dropAccumulator >= dropIntervalMs) {
+      if (current && dropAccumulator >= dropIntervalMs) {
         dropAccumulator = 0;
         if (!tryMoveDown()) fallLockPiece();
       }
@@ -439,7 +466,7 @@
     window.addEventListener('keydown', (e) => {
       if (mode !== 'fall' || !running) return;
       if (e.key === 'p' || e.key === 'P') { setPaused(!paused); e.preventDefault(); return; }
-      if (paused) return;
+      if (paused || !current) return;
       switch (e.key) {
         case 'ArrowLeft': tryMoveHorizontal(-1); e.preventDefault(); break;
         case 'ArrowRight': tryMoveHorizontal(1); e.preventDefault(); break;
@@ -449,7 +476,7 @@
       }
     });
 
-    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (mode === 'fall' && running && !paused) fn(); });
+    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (mode === 'fall' && running && !paused && current) fn(); });
     bind('btn-left', () => tryMoveHorizontal(-1));
     bind('btn-right', () => tryMoveHorizontal(1));
     bind('btn-down', () => { if (!tryMoveDown()) fallLockPiece(); });
