@@ -107,6 +107,42 @@ const TRANSLATIONS = {
     "detail.level": "等级", "detail.lines": "消除行数",
     "gameOver.bestFor": "{mode}最佳记录",
   },
+  "zh-TW": {
+    subtitle: "多環芳香烴方塊拼圖",
+    score: "分數", best: "最佳", level: "等級",
+    "home.tagline": "稠環分子，六邊形拼接。選擇一種玩法。",
+    "home.fallingTitle": "下落模式",
+    "home.fallingDesc": "分子像俄羅斯方塊一樣落下——移動、旋轉，在堆滿之前消除整列。",
+    "home.placingTitle": "放置模式",
+    "home.placingDesc": "不用著急——從托盤中選一個分子，放到棋盤上任何放得下的位置。",
+    "lang.label": "語言",
+    "orientation.tagline": "六邊形應該朝哪個方向？",
+    "orientation.flatTitle": "平頂",
+    "orientation.flatDesc": "垂直落下非常筆直；左右移動會略微偏斜。",
+    "orientation.pointyTitle": "尖頂",
+    "orientation.pointyDesc": "左右移動非常筆直；落下會略微偏斜。",
+    "difficulty.tagline": "分子應該有多複雜？",
+    "difficulty.easyTitle": "簡單",
+    "difficulty.easyDesc": "主要是苯和萘，偶爾出現較大的分子。",
+    "difficulty.normalTitle": "普通",
+    "difficulty.normalDesc": "各種分子均衡出現。",
+    "difficulty.hardTitle": "困難",
+    "difficulty.hardDesc": "較大的稠環分子經常出現。",
+    "difficulty.expertTitle": "專家",
+    "difficulty.expertDesc": "暈苯等大分子頻繁出現。",
+    back: "返回",
+    "game.home": "首頁", "game.pause": "暫停", "game.resume": "繼續",
+    "game.next": "下一個", "game.fallingLabel": "下落中", "game.newGame": "新遊戲",
+    "controls.left": "左", "controls.rotate": "旋轉", "controls.right": "右",
+    "controls.softDrop": "軟降", "controls.hardDrop": "硬降",
+    "gameOver.title": "遊戲結束", "gameOver.finalScore": "最終分數", "gameOver.newBest": "刷新最佳紀錄！",
+    "paused.title": "已暫停",
+    "share.button": "分享", "share.copyLink": "複製連結", "share.copied": "已複製！",
+    "share.message": "我在 PAH Block Puzzle 中獲得了 {score} 分！你能超過我嗎？",
+    "detail.mode": "模式", "detail.difficulty": "難度", "detail.hexes": "六邊形方向",
+    "detail.level": "等級", "detail.lines": "消除列數",
+    "gameOver.bestFor": "{mode}最佳紀錄",
+  },
   ko: {
     subtitle: "다환 방향족 블록 퍼즐",
     score: "점수", best: "최고 점수", level: "레벨",
@@ -142,6 +178,42 @@ const TRANSLATIONS = {
     "detail.mode": "모드", "detail.difficulty": "난이도", "detail.hexes": "육각형 방향",
     "detail.level": "레벨", "detail.lines": "지운 줄",
     "gameOver.bestFor": "{mode} 최고 점수",
+  },
+  bg: {
+    subtitle: "Пъзел с полициклични ароматни блокчета",
+    score: "Точки", best: "Рекорд", level: "Ниво",
+    "home.tagline": "Молекули със свързани пръстени, шестоъгълник по шестоъгълник. Изберете начин на игра.",
+    "home.fallingTitle": "Падане",
+    "home.fallingDesc": "Молекулите падат като в тетрис — местете, въртете и изчиствайте пълните редове, преди да се натрупат.",
+    "home.placingTitle": "Поставяне",
+    "home.placingDesc": "Без бързане — изберете молекула от таблата и я поставете където пасва на дъската.",
+    "lang.label": "Език",
+    "orientation.tagline": "Накъде да сочат шестоъгълниците?",
+    "orientation.flatTitle": "С плоска страна нагоре",
+    "orientation.flatDesc": "Пада в идеално права колона; страничните движения се отклоняват леко.",
+    "orientation.pointyTitle": "С връх нагоре",
+    "orientation.pointyDesc": "Страничните движения са идеално прави; падането се отклонява леко.",
+    "difficulty.tagline": "Колко сложни да бъдат молекулите?",
+    "difficulty.easyTitle": "Лесно",
+    "difficulty.easyDesc": "Предимно бензен и нафталин, рядко по-големи.",
+    "difficulty.normalTitle": "Нормално",
+    "difficulty.normalDesc": "Балансирана смес от целия набор.",
+    "difficulty.hardTitle": "Трудно",
+    "difficulty.hardDesc": "По-големите свързани пръстени се появяват често.",
+    "difficulty.expertTitle": "Експерт",
+    "difficulty.expertDesc": "Коронен и подобни, много често.",
+    back: "Назад",
+    "game.home": "Начало", "game.pause": "Пауза", "game.resume": "Продължи",
+    "game.next": "Следваща", "game.fallingLabel": "Пада", "game.newGame": "Нова игра",
+    "controls.left": "Наляво", "controls.rotate": "Завъртане", "controls.right": "Надясно",
+    "controls.softDrop": "Бавно падане", "controls.hardDrop": "Бързо падане",
+    "gameOver.title": "Край на играта", "gameOver.finalScore": "Краен резултат", "gameOver.newBest": "Нов рекорд!",
+    "paused.title": "На пауза",
+    "share.button": "Споделяне", "share.copyLink": "Копиране на връзката", "share.copied": "Копирано!",
+    "share.message": "Направих {score} точки в PAH Block Puzzle! Можеш ли да ме надминеш?",
+    "detail.mode": "Режим", "detail.difficulty": "Трудност", "detail.hexes": "Шестоъгълници",
+    "detail.level": "Ниво", "detail.lines": "Изчистени редове",
+    "gameOver.bestFor": "Рекорд — {mode}",
   },
   de: {
     subtitle: "Polyzyklisches aromatisches Block-Puzzle",
@@ -179,6 +251,114 @@ const TRANSLATIONS = {
     "detail.level": "Level", "detail.lines": "Gelöste Reihen",
     "gameOver.bestFor": "Bestwert in {mode}",
   },
+  et: {
+    subtitle: "Polütsükliliste aromaatsete plokkide pusle",
+    score: "Punktid", best: "Rekord", level: "Tase",
+    "home.tagline": "Liitunud tsüklitega molekulid, kuusnurk kuusnurga haaval. Vali mängimisviis.",
+    "home.fallingTitle": "Kukkumine",
+    "home.fallingDesc": "Molekulid kukuvad nagu Tetrises — liiguta, pööra ja puhasta täisread, enne kui need kuhjuvad.",
+    "home.placingTitle": "Paigutamine",
+    "home.placingDesc": "Ilma kiirustamata — vali alusel olev molekul ja aseta see mängulaual sobivasse kohta.",
+    "lang.label": "Keel",
+    "orientation.tagline": "Kuhu peaksid kuusnurgad osutama?",
+    "orientation.flatTitle": "Lame tipp",
+    "orientation.flatDesc": "Kukub täiesti otse; külgsuunalised liigutused kalduvad veidi kõrvale.",
+    "orientation.pointyTitle": "Terav tipp",
+    "orientation.pointyDesc": "Külgsuunalised liigutused on täiesti sirged; kukkumine kaldub veidi kõrvale.",
+    "difficulty.tagline": "Kui keerulised peaksid molekulid olema?",
+    "difficulty.easyTitle": "Lihtne",
+    "difficulty.easyDesc": "Peamiselt benseen ja naftaleen, harva midagi suuremat.",
+    "difficulty.normalTitle": "Tavaline",
+    "difficulty.normalDesc": "Tasakaalustatud valik kogu komplektist.",
+    "difficulty.hardTitle": "Raske",
+    "difficulty.hardDesc": "Suuremad liittsüklid ilmuvad sageli.",
+    "difficulty.expertTitle": "Ekspert",
+    "difficulty.expertDesc": "Koroneen ja sarnased, väga sageli.",
+    back: "Tagasi",
+    "game.home": "Avaleht", "game.pause": "Paus", "game.resume": "Jätka",
+    "game.next": "Järgmine", "game.fallingLabel": "Kukub", "game.newGame": "Uus mäng",
+    "controls.left": "Vasakule", "controls.rotate": "Pööra", "controls.right": "Paremale",
+    "controls.softDrop": "Aeglane langus", "controls.hardDrop": "Kiire langus",
+    "gameOver.title": "Mäng läbi", "gameOver.finalScore": "Lõpptulemus", "gameOver.newBest": "Uus rekord!",
+    "paused.title": "Pausil",
+    "share.button": "Jaga", "share.copyLink": "Kopeeri link", "share.copied": "Kopeeritud!",
+    "share.message": "Sain PAH Block Puzzle'is {score} punkti! Kas suudad mind võita?",
+    "detail.mode": "Režiim", "detail.difficulty": "Raskusaste", "detail.hexes": "Kuusnurgad",
+    "detail.level": "Tase", "detail.lines": "Puhastatud read",
+    "gameOver.bestFor": "Rekord — {mode}",
+  },
+  el: {
+    subtitle: "Παζλ με πολυκυκλικά αρωματικά μπλοκ",
+    score: "Σκορ", best: "Ρεκόρ", level: "Επίπεδο",
+    "home.tagline": "Μόρια με συντηγμένους δακτυλίους, εξάγωνο προς εξάγωνο. Διάλεξε τρόπο παιχνιδιού.",
+    "home.fallingTitle": "Πτώση",
+    "home.fallingDesc": "Τα μόρια πέφτουν όπως στο Tetris — μετακίνησέ τα, περίστρεψέ τα και καθάρισε γεμάτες σειρές πριν στοιβαχτούν.",
+    "home.placingTitle": "Τοποθέτηση",
+    "home.placingDesc": "Χωρίς βιασύνη — διάλεξε ένα μόριο από τον δίσκο και τοποθέτησέ το όπου χωράει στο ταμπλό.",
+    "lang.label": "Γλώσσα",
+    "orientation.tagline": "Προς τα πού να δείχνουν τα εξάγωνα;",
+    "orientation.flatTitle": "Επίπεδη κορυφή",
+    "orientation.flatDesc": "Πέφτει σε απόλυτα ευθεία στήλη· οι πλάγιες κινήσεις παρεκκλίνουν ελαφρώς.",
+    "orientation.pointyTitle": "Μυτερή κορυφή",
+    "orientation.pointyDesc": "Οι πλάγιες κινήσεις είναι απόλυτα ευθείες· η πτώση παρεκκλίνει ελαφρώς.",
+    "difficulty.tagline": "Πόσο σύνθετα να είναι τα μόρια;",
+    "difficulty.easyTitle": "Εύκολο",
+    "difficulty.easyDesc": "Κυρίως βενζόλιο και ναφθαλένιο, σπάνια κάτι μεγαλύτερο.",
+    "difficulty.normalTitle": "Κανονικό",
+    "difficulty.normalDesc": "Ισορροπημένο μείγμα από όλο το σύνολο.",
+    "difficulty.hardTitle": "Δύσκολο",
+    "difficulty.hardDesc": "Οι μεγαλύτεροι συντηγμένοι δακτύλιοι εμφανίζονται συχνά.",
+    "difficulty.expertTitle": "Ειδικός",
+    "difficulty.expertDesc": "Κορονένιο και παρόμοια, πολύ συχνά.",
+    back: "Πίσω",
+    "game.home": "Αρχική", "game.pause": "Παύση", "game.resume": "Συνέχεια",
+    "game.next": "Επόμενο", "game.fallingLabel": "Πέφτει", "game.newGame": "Νέο παιχνίδι",
+    "controls.left": "Αριστερά", "controls.rotate": "Περιστροφή", "controls.right": "Δεξιά",
+    "controls.softDrop": "Αργή πτώση", "controls.hardDrop": "Γρήγορη πτώση",
+    "gameOver.title": "Τέλος παιχνιδιού", "gameOver.finalScore": "Τελικό σκορ", "gameOver.newBest": "Νέο ρεκόρ!",
+    "paused.title": "Σε παύση",
+    "share.button": "Κοινοποίηση", "share.copyLink": "Αντιγραφή συνδέσμου", "share.copied": "Αντιγράφηκε!",
+    "share.message": "Πέτυχα {score} πόντους στο PAH Block Puzzle! Μπορείς να με ξεπεράσεις;",
+    "detail.mode": "Λειτουργία", "detail.difficulty": "Δυσκολία", "detail.hexes": "Εξάγωνα",
+    "detail.level": "Επίπεδο", "detail.lines": "Σειρές που καθαρίστηκαν",
+    "gameOver.bestFor": "Ρεκόρ — {mode}",
+  },
+  es: {
+    subtitle: "Rompecabezas de bloques aromáticos policíclicos",
+    score: "Puntos", best: "Mejor", level: "Nivel",
+    "home.tagline": "Moléculas de anillos fusionados, hexágono a hexágono. Elige cómo jugar.",
+    "home.fallingTitle": "Caída",
+    "home.fallingDesc": "Las moléculas caen como en Tetris: muévelas, gíralas y completa filas antes de que se acumulen.",
+    "home.placingTitle": "Colocación",
+    "home.placingDesc": "Sin prisa: elige una molécula de la bandeja y colócala donde quepa en el tablero.",
+    "lang.label": "Idioma",
+    "orientation.tagline": "¿Hacia dónde deben apuntar los hexágonos?",
+    "orientation.flatTitle": "Lado arriba",
+    "orientation.flatDesc": "Cae en columna perfectamente recta; los movimientos laterales se desvían un poco.",
+    "orientation.pointyTitle": "Vértice arriba",
+    "orientation.pointyDesc": "Los movimientos laterales son perfectamente rectos; la caída se desvía un poco.",
+    "difficulty.tagline": "¿Qué tan complejas deben ser las moléculas?",
+    "difficulty.easyTitle": "Fácil",
+    "difficulty.easyDesc": "Sobre todo benceno y naftaleno, alguna más grande de vez en cuando.",
+    "difficulty.normalTitle": "Normal",
+    "difficulty.normalDesc": "Una mezcla equilibrada de todo el conjunto.",
+    "difficulty.hardTitle": "Difícil",
+    "difficulty.hardDesc": "Los anillos fusionados grandes aparecen a menudo.",
+    "difficulty.expertTitle": "Experto",
+    "difficulty.expertDesc": "Coroneno y compañía, con frecuencia.",
+    back: "Atrás",
+    "game.home": "Inicio", "game.pause": "Pausa", "game.resume": "Reanudar",
+    "game.next": "Siguiente", "game.fallingLabel": "Cayendo", "game.newGame": "Nueva partida",
+    "controls.left": "Izquierda", "controls.rotate": "Girar", "controls.right": "Derecha",
+    "controls.softDrop": "Caída suave", "controls.hardDrop": "Caída rápida",
+    "gameOver.title": "Fin de la partida", "gameOver.finalScore": "Puntuación final", "gameOver.newBest": "¡Nuevo récord!",
+    "paused.title": "En pausa",
+    "share.button": "Compartir", "share.copyLink": "Copiar enlace", "share.copied": "¡Copiado!",
+    "share.message": "¡He conseguido {score} puntos en PAH Block Puzzle! ¿Puedes superarme?",
+    "detail.mode": "Modo", "detail.difficulty": "Dificultad", "detail.hexes": "Hexágonos",
+    "detail.level": "Nivel", "detail.lines": "Filas eliminadas",
+    "gameOver.bestFor": "Mejor en {mode}",
+  },
   fr: {
     subtitle: "Puzzle de blocs aromatiques polycycliques",
     score: "Score", best: "Meilleur", level: "Niveau",
@@ -215,18 +395,232 @@ const TRANSLATIONS = {
     "detail.level": "Niveau", "detail.lines": "Lignes effacées",
     "gameOver.bestFor": "Meilleur en {mode}",
   },
+  it: {
+    subtitle: "Rompicapo a blocchi aromatici policiclici",
+    score: "Punti", best: "Record", level: "Livello",
+    "home.tagline": "Molecole ad anelli condensati, esagono dopo esagono. Scegli come giocare.",
+    "home.fallingTitle": "Caduta",
+    "home.fallingDesc": "Le molecole cadono come in Tetris — spostale, ruotale e completa le righe prima che si accumulino.",
+    "home.placingTitle": "Posizionamento",
+    "home.placingDesc": "Con calma — scegli una molecola dal vassoio e sistemala dove entra sul tabellone.",
+    "lang.label": "Lingua",
+    "orientation.tagline": "Come devono essere orientati gli esagoni?",
+    "orientation.flatTitle": "Lato in alto",
+    "orientation.flatDesc": "Cade in colonna perfettamente dritta; i movimenti laterali deviano leggermente.",
+    "orientation.pointyTitle": "Vertice in alto",
+    "orientation.pointyDesc": "I movimenti laterali sono perfettamente dritti; la caduta devia leggermente.",
+    "difficulty.tagline": "Quanto devono essere complesse le molecole?",
+    "difficulty.easyTitle": "Facile",
+    "difficulty.easyDesc": "Soprattutto benzene e naftalene, qualcuna più grande ogni tanto.",
+    "difficulty.normalTitle": "Normale",
+    "difficulty.normalDesc": "Un mix equilibrato di tutto l'insieme.",
+    "difficulty.hardTitle": "Difficile",
+    "difficulty.hardDesc": "Gli anelli condensati più grandi compaiono spesso.",
+    "difficulty.expertTitle": "Esperto",
+    "difficulty.expertDesc": "Coronene e simili, di frequente.",
+    back: "Indietro",
+    "game.home": "Home", "game.pause": "Pausa", "game.resume": "Riprendi",
+    "game.next": "Prossima", "game.fallingLabel": "In caduta", "game.newGame": "Nuova partita",
+    "controls.left": "Sinistra", "controls.rotate": "Ruota", "controls.right": "Destra",
+    "controls.softDrop": "Discesa lenta", "controls.hardDrop": "Discesa rapida",
+    "gameOver.title": "Partita finita", "gameOver.finalScore": "Punteggio finale", "gameOver.newBest": "Nuovo record!",
+    "paused.title": "In pausa",
+    "share.button": "Condividi", "share.copyLink": "Copia link", "share.copied": "Copiato!",
+    "share.message": "Ho totalizzato {score} punti in PAH Block Puzzle! Riesci a battermi?",
+    "detail.mode": "Modalità", "detail.difficulty": "Difficoltà", "detail.hexes": "Esagoni",
+    "detail.level": "Livello", "detail.lines": "Righe eliminate",
+    "gameOver.bestFor": "Record in {mode}",
+  },
+  pl: {
+    subtitle: "Układanka z wielopierścieniowych węglowodorów aromatycznych",
+    score: "Wynik", best: "Rekord", level: "Poziom",
+    "home.tagline": "Cząsteczki o skondensowanych pierścieniach, sześciokąt po sześciokącie. Wybierz tryb gry.",
+    "home.fallingTitle": "Spadanie",
+    "home.fallingDesc": "Cząsteczki spadają jak w Tetrisie — przesuwaj, obracaj i czyść pełne rzędy, zanim się spiętrzą.",
+    "home.placingTitle": "Układanie",
+    "home.placingDesc": "Bez pośpiechu — wybierz cząsteczkę z tacki i dopasuj ją w dowolnym miejscu planszy.",
+    "lang.label": "Język",
+    "orientation.tagline": "W którą stronę mają być zwrócone sześciokąty?",
+    "orientation.flatTitle": "Bokiem do góry",
+    "orientation.flatDesc": "Spada idealnie prostą kolumną; ruchy na boki lekko zbaczają.",
+    "orientation.pointyTitle": "Wierzchołkiem do góry",
+    "orientation.pointyDesc": "Ruchy na boki są idealnie proste; spadanie lekko zbacza.",
+    "difficulty.tagline": "Jak złożone mają być cząsteczki?",
+    "difficulty.easyTitle": "Łatwy",
+    "difficulty.easyDesc": "Głównie benzen i naftalen, czasem coś większego.",
+    "difficulty.normalTitle": "Normalny",
+    "difficulty.normalDesc": "Zrównoważona mieszanka z całego zestawu.",
+    "difficulty.hardTitle": "Trudny",
+    "difficulty.hardDesc": "Większe skondensowane pierścienie pojawiają się często.",
+    "difficulty.expertTitle": "Ekspert",
+    "difficulty.expertDesc": "Koronen i podobne, bardzo często.",
+    back: "Wstecz",
+    "game.home": "Menu", "game.pause": "Pauza", "game.resume": "Wznów",
+    "game.next": "Następna", "game.fallingLabel": "Spada", "game.newGame": "Nowa gra",
+    "controls.left": "W lewo", "controls.rotate": "Obróć", "controls.right": "W prawo",
+    "controls.softDrop": "Powolne opadanie", "controls.hardDrop": "Szybkie opadanie",
+    "gameOver.title": "Koniec gry", "gameOver.finalScore": "Wynik końcowy", "gameOver.newBest": "Nowy rekord!",
+    "paused.title": "Wstrzymano",
+    "share.button": "Udostępnij", "share.copyLink": "Kopiuj link", "share.copied": "Skopiowano!",
+    "share.message": "Zdobyłem {score} punktów w PAH Block Puzzle! Pobijesz mnie?",
+    "detail.mode": "Tryb", "detail.difficulty": "Poziom trudności", "detail.hexes": "Sześciokąty",
+    "detail.level": "Poziom", "detail.lines": "Usunięte rzędy",
+    "gameOver.bestFor": "Rekord — {mode}",
+  },
+  ru: {
+    subtitle: "Головоломка из полициклических ароматических блоков",
+    score: "Очки", best: "Рекорд", level: "Уровень",
+    "home.tagline": "Молекулы из конденсированных колец, шестиугольник за шестиугольником. Выберите режим игры.",
+    "home.fallingTitle": "Падение",
+    "home.fallingDesc": "Молекулы падают как в тетрисе — двигайте, вращайте и убирайте заполненные ряды, пока они не накопились.",
+    "home.placingTitle": "Размещение",
+    "home.placingDesc": "Без спешки — выберите молекулу с подноса и поставьте её в любое подходящее место на поле.",
+    "lang.label": "Язык",
+    "orientation.tagline": "Как должны быть повёрнуты шестиугольники?",
+    "orientation.flatTitle": "Плоской стороной вверх",
+    "orientation.flatDesc": "Падает строго по прямой; движения вбок слегка смещаются.",
+    "orientation.pointyTitle": "Вершиной вверх",
+    "orientation.pointyDesc": "Движения вбок строго прямые; падение слегка смещается.",
+    "difficulty.tagline": "Насколько сложными должны быть молекулы?",
+    "difficulty.easyTitle": "Лёгкий",
+    "difficulty.easyDesc": "В основном бензол и нафталин, изредка что-то покрупнее.",
+    "difficulty.normalTitle": "Обычный",
+    "difficulty.normalDesc": "Сбалансированная смесь из всего набора.",
+    "difficulty.hardTitle": "Сложный",
+    "difficulty.hardDesc": "Крупные конденсированные кольца появляются часто.",
+    "difficulty.expertTitle": "Эксперт",
+    "difficulty.expertDesc": "Коронен и подобные — постоянно.",
+    back: "Назад",
+    "game.home": "Главная", "game.pause": "Пауза", "game.resume": "Продолжить",
+    "game.next": "Следующая", "game.fallingLabel": "Падает", "game.newGame": "Новая игра",
+    "controls.left": "Влево", "controls.rotate": "Повернуть", "controls.right": "Вправо",
+    "controls.softDrop": "Мягкое падение", "controls.hardDrop": "Резкое падение",
+    "gameOver.title": "Игра окончена", "gameOver.finalScore": "Итоговый счёт", "gameOver.newBest": "Новый рекорд!",
+    "paused.title": "Пауза",
+    "share.button": "Поделиться", "share.copyLink": "Скопировать ссылку", "share.copied": "Скопировано!",
+    "share.message": "Я набрал {score} очков в PAH Block Puzzle! Сможешь побить?",
+    "detail.mode": "Режим", "detail.difficulty": "Сложность", "detail.hexes": "Шестиугольники",
+    "detail.level": "Уровень", "detail.lines": "Убрано рядов",
+    "gameOver.bestFor": "Рекорд в режиме «{mode}»",
+  },
+  uk: {
+    subtitle: "Головоломка з поліциклічних ароматичних блоків",
+    score: "Очки", best: "Рекорд", level: "Рівень",
+    "home.tagline": "Молекули зі сконденсованих кілець, шестикутник за шестикутником. Оберіть режим гри.",
+    "home.fallingTitle": "Падіння",
+    "home.fallingDesc": "Молекули падають як у тетрисі — рухайте, обертайте та прибирайте заповнені ряди, доки вони не накопичилися.",
+    "home.placingTitle": "Розміщення",
+    "home.placingDesc": "Без поспіху — виберіть молекулу з лотка й поставте її в будь-яке відповідне місце на полі.",
+    "lang.label": "Мова",
+    "orientation.tagline": "Як мають бути повернуті шестикутники?",
+    "orientation.flatTitle": "Пласким боком угору",
+    "orientation.flatDesc": "Падає строго прямо; рухи вбік трохи зміщуються.",
+    "orientation.pointyTitle": "Вершиною вгору",
+    "orientation.pointyDesc": "Рухи вбік строго прямі; падіння трохи зміщується.",
+    "difficulty.tagline": "Наскільки складними мають бути молекули?",
+    "difficulty.easyTitle": "Легкий",
+    "difficulty.easyDesc": "Переважно бензен і нафтален, зрідка щось більше.",
+    "difficulty.normalTitle": "Звичайний",
+    "difficulty.normalDesc": "Збалансована суміш з усього набору.",
+    "difficulty.hardTitle": "Складний",
+    "difficulty.hardDesc": "Великі сконденсовані кільця з'являються часто.",
+    "difficulty.expertTitle": "Експерт",
+    "difficulty.expertDesc": "Коронен і подібні — постійно.",
+    back: "Назад",
+    "game.home": "Головна", "game.pause": "Пауза", "game.resume": "Продовжити",
+    "game.next": "Наступна", "game.fallingLabel": "Падає", "game.newGame": "Нова гра",
+    "controls.left": "Ліворуч", "controls.rotate": "Обернути", "controls.right": "Праворуч",
+    "controls.softDrop": "М'яке падіння", "controls.hardDrop": "Різке падіння",
+    "gameOver.title": "Гру завершено", "gameOver.finalScore": "Підсумковий рахунок", "gameOver.newBest": "Новий рекорд!",
+    "paused.title": "Пауза",
+    "share.button": "Поділитися", "share.copyLink": "Скопіювати посилання", "share.copied": "Скопійовано!",
+    "share.message": "Я набрав {score} очок у PAH Block Puzzle! Зможеш побити?",
+    "detail.mode": "Режим", "detail.difficulty": "Складність", "detail.hexes": "Шестикутники",
+    "detail.level": "Рівень", "detail.lines": "Прибрано рядів",
+    "gameOver.bestFor": "Рекорд у режимі «{mode}»",
+  },
+  fi: {
+    subtitle: "Polysyklisten aromaattisten palikoiden pulmapeli",
+    score: "Pisteet", best: "Ennätys", level: "Taso",
+    "home.tagline": "Yhteenliittyneitä renkaita, kuusikulmio kerrallaan. Valitse pelitapa.",
+    "home.fallingTitle": "Putoaminen",
+    "home.fallingDesc": "Molekyylit putoavat kuin Tetriksessä — siirrä, käännä ja tyhjennä täydet rivit ennen kuin ne kasaantuvat.",
+    "home.placingTitle": "Asettelu",
+    "home.placingDesc": "Ei kiirettä — valitse molekyyli tarjottimelta ja sovita se laudalle mihin tahansa se mahtuu.",
+    "lang.label": "Kieli",
+    "orientation.tagline": "Mihin suuntaan kuusikulmioiden pitäisi osoittaa?",
+    "orientation.flatTitle": "Tasainen yläreuna",
+    "orientation.flatDesc": "Putoaa täysin suoraan; sivuttaisliikkeet poikkeavat hieman.",
+    "orientation.pointyTitle": "Kärki ylöspäin",
+    "orientation.pointyDesc": "Sivuttaisliikkeet ovat täysin suoria; putoaminen poikkeaa hieman.",
+    "difficulty.tagline": "Kuinka monimutkaisia molekyylien pitäisi olla?",
+    "difficulty.easyTitle": "Helppo",
+    "difficulty.easyDesc": "Enimmäkseen bentseeniä ja naftaleenia, harvoin jotain suurempaa.",
+    "difficulty.normalTitle": "Normaali",
+    "difficulty.normalDesc": "Tasapainoinen sekoitus koko valikoimasta.",
+    "difficulty.hardTitle": "Vaikea",
+    "difficulty.hardDesc": "Suuremmat yhteenliittyneet renkaat ilmestyvät usein.",
+    "difficulty.expertTitle": "Asiantuntija",
+    "difficulty.expertDesc": "Koroneenia ja kumppaneita, usein.",
+    back: "Takaisin",
+    "game.home": "Etusivu", "game.pause": "Tauko", "game.resume": "Jatka",
+    "game.next": "Seuraava", "game.fallingLabel": "Putoaa", "game.newGame": "Uusi peli",
+    "controls.left": "Vasemmalle", "controls.rotate": "Käännä", "controls.right": "Oikealle",
+    "controls.softDrop": "Hidas pudotus", "controls.hardDrop": "Nopea pudotus",
+    "gameOver.title": "Peli päättyi", "gameOver.finalScore": "Lopputulos", "gameOver.newBest": "Uusi ennätys!",
+    "paused.title": "Tauolla",
+    "share.button": "Jaa", "share.copyLink": "Kopioi linkki", "share.copied": "Kopioitu!",
+    "share.message": "Sain {score} pistettä PAH Block Puzzlessa! Pystytkö voittamaan?",
+    "detail.mode": "Tila", "detail.difficulty": "Vaikeustaso", "detail.hexes": "Kuusikulmiot",
+    "detail.level": "Taso", "detail.lines": "Tyhjennetyt rivit",
+    "gameOver.bestFor": "Ennätys — {mode}",
+  },
 };
 
-const LANG_NAMES = { en: "English", ja: "日本語", zh: "中文", ko: "한국어", de: "Deutsch", fr: "Français" };
+// Native names, in the order they appear in the picker.
+const LANG_NAMES = {
+  en: "English",
+  ja: "日本語",
+  zh: "简体中文",
+  "zh-TW": "繁體中文",
+  ko: "한국어",
+  bg: "Български",
+  de: "Deutsch",
+  et: "Eesti",
+  el: "Ελληνικά",
+  es: "Español",
+  fr: "Français",
+  it: "Italiano",
+  pl: "Polski",
+  ru: "Русский",
+  uk: "Українська",
+  fi: "Suomi",
+};
 const LANG_STORAGE_KEY = "pahBlockPuzzleLang";
 
 let currentLang = "en";
 
+// Browsers report tags like "pt-BR" or "zh-Hant-TW", so an exact match is
+// tried first (that's what picks up zh-TW), then the bare language. Chinese
+// needs its own check because the script, not the region, decides which of
+// the two Chinese translations fits -- zh-Hant, zh-HK and zh-MO are all
+// Traditional despite not being zh-TW.
 function detectDefaultLang() {
   const stored = localStorage.getItem(LANG_STORAGE_KEY);
   if (stored && TRANSLATIONS[stored]) return stored;
-  const nav = (navigator.language || "en").slice(0, 2).toLowerCase();
-  return TRANSLATIONS[nav] ? nav : "en";
+  const keys = Object.keys(TRANSLATIONS);
+  const tags = (navigator.languages && navigator.languages.length)
+    ? navigator.languages
+    : [navigator.language || "en"];
+  for (const tag of tags) {
+    const lower = String(tag).toLowerCase();
+    const exact = keys.find((k) => k.toLowerCase() === lower);
+    if (exact) return exact;
+    if (lower.startsWith("zh")) return /hant|-tw|-hk|-mo/.test(lower) ? "zh-TW" : "zh";
+    const base = keys.find((k) => k.toLowerCase() === lower.split("-")[0]);
+    if (base) return base;
+  }
+  return "en";
 }
 
 function t(key) {
@@ -241,6 +635,8 @@ function applyTranslations() {
   document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
     el.setAttribute("aria-label", t(el.dataset.i18nAria));
   });
+  const select = document.getElementById("lang-select");
+  if (select) select.setAttribute("aria-label", t("lang.label"));
 }
 
 function setLanguage(lang) {
@@ -248,22 +644,24 @@ function setLanguage(lang) {
   currentLang = lang;
   localStorage.setItem(LANG_STORAGE_KEY, lang);
   applyTranslations();
-  document.querySelectorAll(".lang-pill").forEach((el) => {
-    el.classList.toggle("active", el.dataset.lang === lang);
-  });
+  const select = document.getElementById("lang-select");
+  if (select) select.value = lang;
 }
 
 function initI18n() {
   currentLang = detectDefaultLang();
   const container = document.getElementById("lang-selector");
+  const select = document.createElement("select");
+  select.id = "lang-select";
   Object.keys(LANG_NAMES).forEach((lang) => {
-    const btn = document.createElement("button");
-    btn.className = "lang-pill" + (lang === currentLang ? " active" : "");
-    btn.dataset.lang = lang;
-    btn.textContent = LANG_NAMES[lang];
-    btn.addEventListener("click", () => setLanguage(lang));
-    container.appendChild(btn);
+    const option = document.createElement("option");
+    option.value = lang;
+    option.textContent = LANG_NAMES[lang];
+    select.appendChild(option);
   });
+  select.value = currentLang;
+  select.addEventListener("change", () => setLanguage(select.value));
+  container.appendChild(select);
   applyTranslations();
 }
 

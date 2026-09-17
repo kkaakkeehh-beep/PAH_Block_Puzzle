@@ -202,19 +202,19 @@ h1 .subtitle {
   justify-content: center;
 }
 
-.lang-pill {
-  background: var(--paper);
+/* A dropdown rather than a row of pills: at sixteen languages the pills
+   wrapped to five rows on a phone and pushed the mode cards off-screen. */
+#lang-select {
+  font-family: inherit;
+  font-size: 0.82rem;
   color: var(--ink);
-  opacity: 0.55;
+  background: var(--paper);
+  border: 1px solid rgba(127, 133, 140, 0.35);
+  border-radius: 8px;
   box-shadow: var(--shadow);
-  padding: 5px 10px;
-  font-size: 0.78rem;
-}
-
-.lang-pill.active {
-  background: var(--accent);
-  color: #fff;
-  opacity: 1;
+  padding: 7px 10px;
+  max-width: 100%;
+  cursor: pointer;
 }
 
 .home-tagline {
