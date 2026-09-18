@@ -967,21 +967,48 @@
 
   // Marks the boundary between SPAWN_ROW-1 and SPAWN_ROW: stack up to (or
   // past) it in the spawn columns and the next piece won't fit.
+  // The threshold is not a straight line. A hex grid staggers the cells of
+  // one row by half a cell from column to column, so the height you must not
+  // stack past alternates as you go across -- the old straight line took the
+  // middle column's height and was wrong for every other column by half a
+  // cell. Tracing the upper edges of the row's own cells puts it exactly
+  // where it is, and the zigzag reads as a boundary rather than decoration.
+  //
+  // Which corners are "upper" depends on the orientation: a flat-top cell has
+  // a horizontal top edge (corners 4-5), while a pointy-top cell comes to a
+  // peak (corners 4-5-0).
   function drawDeadline(ctx) {
-    const col = Math.floor(NUM_COLS / 2);
-    const [, yAbove] = cellCenter(col, SPAWN_ROW - 1);
-    const [, yAt] = cellCenter(col, SPAWN_ROW);
-    const lineY = (yAbove + yAt) / 2;
-    const [x0] = cellCenter(0, SPAWN_ROW);
-    const [x1] = cellCenter(NUM_COLS - 1, SPAWN_ROW);
-    const pad = hexSize * 1.2;
+    // Wash the cells above the threshold, so the danger zone reads as a band
+    // rather than resting on a thin line being noticed. Drawn under the
+    // pieces, and faint enough not to fight with them.
+    for (let row = 0; row < SPAWN_ROW; row++) {
+      for (let col = 0; col < NUM_COLS; col++) {
+        const [cx, cy] = cellCenter(col, row);
+        drawHex(ctx, cx, cy, hexSize * 0.96, 'rgba(214, 40, 40, 0.08)', null, 0);
+      }
+    }
+
+    const topCorners = getOrientation() === 'flat' ? [4, 5] : [4, 5, 0];
+    const points = [];
+    for (let col = 0; col < NUM_COLS; col++) {
+      const [cx, cy] = cellCenter(col, SPAWN_ROW);
+      for (const i of topCorners) points.push(hexCorner(cx, cy, hexSize, i));
+    }
+    // Short stubs past the outer cells, so it reads as a line spanning the
+    // board rather than stopping short of the walls.
+    const stub = hexSize * 0.5;
+    const first = points[0], last = points[points.length - 1];
+
     ctx.save();
-    ctx.strokeStyle = 'rgba(214, 40, 40, 0.75)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([6, 5]);
+    ctx.strokeStyle = 'rgba(214, 40, 40, 0.9)';
+    ctx.lineWidth = Math.max(2, hexSize * 0.14);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.setLineDash([hexSize * 0.55, hexSize * 0.36]);
     ctx.beginPath();
-    ctx.moveTo(x0 - pad, lineY);
-    ctx.lineTo(x1 + pad, lineY);
+    ctx.moveTo(first[0] - stub, first[1]);
+    for (const [px, py] of points) ctx.lineTo(px, py);
+    ctx.lineTo(last[0] + stub, last[1]);
     ctx.stroke();
     ctx.restore();
   }
