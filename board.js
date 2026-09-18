@@ -288,7 +288,7 @@ function drawDoubleBonds(ctx, cx, cy, size, edges, color, lineWidth) {
   ctx.lineCap = 'round';
   for (const i of edges) {
     const [x1, y1] = hexCorner(cx, cy, size, i);
-    const [x2, y2] = hexCorner(cx, cy, size, i + 1);
+    const [x2, y2] = hexCorner(cx, cy, size, (i + 1) % 6);
     const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
     const len = Math.hypot(cx - mx, cy - my) || 1;
     const nx = (cx - mx) / len * size * 0.2;
