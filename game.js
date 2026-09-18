@@ -50,7 +50,7 @@
   const HIGH_SCORE_KEYS = { fall: 'pahBlockPuzzleHighScore_fall', place: 'pahBlockPuzzleHighScore_place' };
 
   function getStoredBest(forMode) {
-    return Number(localStorage.getItem(HIGH_SCORE_KEYS[forMode]) || 0);
+    return Number(localStorage.getItem(HIGH_SCORE_KEYS[forMode])) || 0;
   }
 
   // Which molecules the player has actually landed, for the home-screen
@@ -66,7 +66,7 @@
   function markSeen(shape) {
     if (seenMolecules.has(shape.name)) return;
     seenMolecules.add(shape.name);
-    localStorage.setItem(SEEN_KEY, JSON.stringify([...seenMolecules]));
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seenMolecules])); } catch (e) { /* storage full or disabled */ }
   }
   const TRAY_SIZE = 3;
 
@@ -258,7 +258,7 @@
     bestModeTag.textContent = ' · ' + modeName(mode);
     const stored = getStoredBest(mode);
     const best = Math.max(stored, score);
-    if (best > stored) localStorage.setItem(HIGH_SCORE_KEYS[mode], String(best));
+    if (best > stored) try { localStorage.setItem(HIGH_SCORE_KEYS[mode], String(best)); } catch (e) { /* storage full or disabled */ }
     bestScoreEl.textContent = best;
     if (mode === 'fall') {
       currentLabelEl.textContent = current ? `${current.shape.name} (${current.shape.formula})` : '';
@@ -297,7 +297,7 @@
     gameOver = true;
     running = false;
     if (score > bestAtStart) {
-      localStorage.setItem(HIGH_SCORE_KEYS[mode], String(score));
+      try { localStorage.setItem(HIGH_SCORE_KEYS[mode], String(score)); } catch (e) { /* storage full or disabled */ }
       newBestEl.classList.remove('hidden');
     } else {
       newBestEl.classList.add('hidden');
@@ -488,7 +488,7 @@
   }
 
   function fallLockPiece() {
-    placeCells(board, fallCells(current), current.shape);
+    placeCells(board, fallCells(current), current.shape, current.rotationIndex);
     markSeen(current.shape);
     score += current.shape.rotationStates[0].length * 10;
     current = null;
@@ -572,6 +572,7 @@
   }
 
   function rotateSlot(index) {
+    if (!running || gameOver) return;
     const slot = tray[index];
     if (!slot) return;
     slot.rotationIndex = (slot.rotationIndex + 1) % slot.shape.rotationStates.length;
@@ -667,7 +668,7 @@
     if (!slot) return false;
     const cells = getPieceCells(slot.shape, slot.rotationIndex, anchorQ, anchorR);
     if (!canPlaceCells(board, cells)) return false;
-    placeCells(board, cells, slot.shape);
+    placeCells(board, cells, slot.shape, slot.rotationIndex);
     markSeen(slot.shape);
     score += cells.length * 10;
     tray[slotIndex] = null;
@@ -968,6 +969,10 @@
     screen = 'home';
     pendingMode = null;
     running = false;
+    flashRows = [];
+    flashTimer = 0;
+    pendingClearBoard = null;
+    pendingClearCallback = null;
     gameScreen.classList.add('hidden');
     levelBox.classList.add('hidden');
     hideAllPreGameScreens();
@@ -1190,10 +1195,13 @@
 
   function tick(timestamp) {
     if (lastFrameTime === null) lastFrameTime = timestamp;
-    const dt = timestamp - lastFrameTime;
+    // Cap dt to prevent massive spikes when switching back from a background
+    // tab -- without this, elapsedMs instantly skips levels and lockTimer
+    // expires on the first visible frame.
+    const dt = Math.min(timestamp - lastFrameTime, 100);
     lastFrameTime = timestamp;
 
-    if (flashTimer > 0) {
+    if (flashTimer > 0 && !paused) {
       flashTimer -= dt;
       if (flashTimer <= 0) {
         flashRows = [];
@@ -1240,6 +1248,7 @@
 
   function softDrop() {
     if (!tryMoveDown()) fallLockPiece();
+    else dropAccumulator = 0;
   }
 
   // Tapping the on-screen down button twice quickly drops the piece the rest
@@ -1283,7 +1292,7 @@
       }
     });
 
-    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (screen === 'game' && mode === 'fall' && running && !paused && current) fn(); });
+    const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', () => { if (screen === 'game' && mode === 'fall' && running && !paused && current) fn(); }); };
     bind('btn-left', () => tryMoveHorizontal(-1));
     bind('btn-right', () => tryMoveHorizontal(1));
     bind('btn-down', tapDown);
@@ -1342,12 +1351,14 @@
   // One-time migration: seed both per-mode bests from the old shared one so
   // nobody's existing high score just disappears.
   (function migrateLegacyHighScore() {
-    const legacy = localStorage.getItem(LEGACY_HIGH_SCORE_KEY);
-    if (legacy === null) return;
-    for (const key of Object.values(HIGH_SCORE_KEYS)) {
-      if (localStorage.getItem(key) === null) localStorage.setItem(key, legacy);
-    }
-    localStorage.removeItem(LEGACY_HIGH_SCORE_KEY);
+    try {
+      const legacy = localStorage.getItem(LEGACY_HIGH_SCORE_KEY);
+      if (legacy === null) return;
+      for (const key of Object.values(HIGH_SCORE_KEYS)) {
+        if (localStorage.getItem(key) === null) localStorage.setItem(key, legacy);
+      }
+      localStorage.removeItem(LEGACY_HIGH_SCORE_KEY);
+    } catch (e) { /* storage disabled */ }
   })();
 
   buildPlacePanel();

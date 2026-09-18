@@ -31,8 +31,10 @@ function canPlaceCells(board, cells) {
 // cells[i] corresponds to shape.offsets[i] (getPieceCells maps offsets in
 // place), so a locked cell can remember whether its ring carried one of the
 // molecule's Clar sextets long after the piece itself is gone.
-function placeCells(board, cells, shape) {
-  const bonds = kekuleBondsForCells(cells);
+function placeCells(board, cells, shape, rotationIndex) {
+  const bonds = rotationIndex !== undefined
+    ? kekuleBondsForPiece(shape, rotationIndex)
+    : kekuleBondsForCells(cells);
   cells.forEach(([q, r], i) => {
     board.set(axialKey(q, r), { color: shape.color, bonds: bonds[i] });
   });
@@ -50,14 +52,18 @@ function clearFullRows(board, shiftDown) {
   for (const [row, cols] of rowCols) if (cols.size >= NUM_COLS) fullRows.push(row);
   if (fullRows.length === 0) return { cleared: [], board };
   fullRows.sort((a, b) => a - b);
+  const fullRowSet = new Set(fullRows);
 
   const newBoard = new Map();
   for (const [key, cell] of board) {
     const [q, r] = key.split(',').map(Number);
     const [col, row] = axialToOffset(q, r);
-    if (fullRows.includes(row)) continue;
+    if (fullRowSet.has(row)) continue;
     if (!shiftDown) { newBoard.set(key, cell); continue; }
-    const shift = fullRows.filter(cr => cr > row).length;
+    let shift = 0;
+    for (let i = fullRows.length - 1; i >= 0; i--) {
+      if (fullRows[i] > row) shift++; else break;
+    }
     const [nq, nr] = offsetToAxial(col, row + shift);
     newBoard.set(axialKey(nq, nr), cell);
   }
@@ -336,7 +342,7 @@ function drawDoubleBonds(ctx, cx, cy, size, edges, color, lineWidth) {
   ctx.lineCap = 'round';
   for (const i of edges) {
     const [x1, y1] = hexCorner(cx, cy, size, i);
-    const [x2, y2] = hexCorner(cx, cy, size, i + 1);
+    const [x2, y2] = hexCorner(cx, cy, size, (i + 1) % 6);
     const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
     const len = Math.hypot(cx - mx, cy - my) || 1;
     const nx = (cx - mx) / len * size * 0.2;
@@ -385,10 +391,16 @@ function drawLockedCells(ctx, board, flashRowSet, flashOn) {
   }
 }
 
-// Inverse of axialToPixel (flat-top) + cube rounding, for pointer placement.
+// Inverse of axialToPixel + cube rounding, for pointer placement.
 function pixelToAxial(px, py, size) {
-  const q = px / (1.5 * size);
-  const r = py / (SQRT3 * size) - q / 2;
+  let q, r;
+  if (ORIENTATION === 'flat') {
+    q = px / (1.5 * size);
+    r = py / (SQRT3 * size) - q / 2;
+  } else {
+    r = py / (1.5 * size);
+    q = px / (SQRT3 * size) - r / 2;
+  }
   let rx = q, rz = r, ry = -q - r;
   let ix = Math.round(rx), iy = Math.round(ry), iz = Math.round(rz);
   const dx = Math.abs(ix - rx), dy = Math.abs(iy - ry), dz = Math.abs(iz - rz);
