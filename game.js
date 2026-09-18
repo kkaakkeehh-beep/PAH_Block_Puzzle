@@ -1190,7 +1190,10 @@
 
   function tick(timestamp) {
     if (lastFrameTime === null) lastFrameTime = timestamp;
-    const dt = timestamp - lastFrameTime;
+    // Cap dt to prevent massive spikes when switching back from a background
+    // tab -- without this, elapsedMs instantly skips levels and lockTimer
+    // expires on the first visible frame.
+    const dt = Math.min(timestamp - lastFrameTime, 100);
     lastFrameTime = timestamp;
 
     if (flashTimer > 0) {
