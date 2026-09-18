@@ -50,7 +50,7 @@
   const HIGH_SCORE_KEYS = { fall: 'pahBlockPuzzleHighScore_fall', place: 'pahBlockPuzzleHighScore_place' };
 
   function getStoredBest(forMode) {
-    return Number(localStorage.getItem(HIGH_SCORE_KEYS[forMode]) || 0);
+    return Number(localStorage.getItem(HIGH_SCORE_KEYS[forMode])) || 0;
   }
 
   // Which molecules the player has actually landed, for the home-screen
@@ -66,7 +66,7 @@
   function markSeen(shape) {
     if (seenMolecules.has(shape.name)) return;
     seenMolecules.add(shape.name);
-    localStorage.setItem(SEEN_KEY, JSON.stringify([...seenMolecules]));
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seenMolecules])); } catch (e) { /* storage full or disabled */ }
   }
   const TRAY_SIZE = 3;
 
@@ -258,7 +258,7 @@
     bestModeTag.textContent = ' · ' + modeName(mode);
     const stored = getStoredBest(mode);
     const best = Math.max(stored, score);
-    if (best > stored) localStorage.setItem(HIGH_SCORE_KEYS[mode], String(best));
+    if (best > stored) try { localStorage.setItem(HIGH_SCORE_KEYS[mode], String(best)); } catch (e) { /* storage full or disabled */ }
     bestScoreEl.textContent = best;
     if (mode === 'fall') {
       currentLabelEl.textContent = current ? `${current.shape.name} (${current.shape.formula})` : '';
@@ -293,7 +293,7 @@
     gameOver = true;
     running = false;
     if (score > bestAtStart) {
-      localStorage.setItem(HIGH_SCORE_KEYS[mode], String(score));
+      try { localStorage.setItem(HIGH_SCORE_KEYS[mode], String(score)); } catch (e) { /* storage full or disabled */ }
       newBestEl.classList.remove('hidden');
     } else {
       newBestEl.classList.add('hidden');
