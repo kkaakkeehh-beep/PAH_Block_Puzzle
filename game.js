@@ -12,13 +12,19 @@
   // row leaves almost no buffer above a moderately tall stack, so a column
   // near the spawn point could block new pieces well before the board was
   // actually full.
-  function spawnAxial(shape) {
-    const offsets = shape.rotationStates[0];
+  // The anchor column that centres a rotation's own bounding width, clamped
+  // so no cell falls off either side.
+  function idealSpawnCol(offsets) {
     const dqs = offsets.map(([dq]) => dq);
     const minDq = Math.min(...dqs), maxDq = Math.max(...dqs);
     const width = maxDq - minDq + 1;
-    let col = Math.floor((NUM_COLS - width) / 2) - minDq;
-    col = Math.max(-minDq, Math.min(col, NUM_COLS - 1 - maxDq));
+    const col = Math.floor((NUM_COLS - width) / 2) - minDq;
+    return Math.max(-minDq, Math.min(col, NUM_COLS - 1 - maxDq));
+  }
+
+  function spawnAxial(shape) {
+    const offsets = shape.rotationStates[0];
+    const col = idealSpawnCol(offsets);
 
     for (let row = 0; row <= SPAWN_ROW + 4; row++) {
       const [aq, ar] = offsetToAxial(col, row);
@@ -346,7 +352,41 @@
 
   // ---------- fall mode ----------
 
+  // spawnAxial picks a position without looking at the stack, so a wide
+  // molecule arriving over an uneven stack could appear already overlapping
+  // it and end the game before the player could move at all. This looks for
+  // somewhere the piece genuinely fits, preferring the top of the board, then
+  // columns outward from the middle, and only as a last resort a rotation
+  // other than the one shown in the Next preview.
+  function findSpawn(shape) {
+    for (let ri = 0; ri < shape.rotationStates.length; ri++) {
+      // Columns are tried outward from the one that centres this rotation's
+      // own bounding box, not from the middle of the board, so on an empty
+      // board a piece still arrives exactly where it always did.
+      const ideal = idealSpawnCol(shape.rotationStates[ri]);
+      const cols = [ideal];
+      for (let d = 1; d < NUM_COLS; d++) {
+        if (ideal - d >= 0) cols.push(ideal - d);
+        if (ideal + d < NUM_COLS) cols.push(ideal + d);
+      }
+      for (let row = 0; row <= SPAWN_ROW + 4; row++) {
+        for (const col of cols) {
+          const [aq, ar] = offsetToAxial(col, row);
+          if (canPlaceCells(board, getPieceCells(shape, ri, aq, ar))) {
+            return { rotationIndex: ri, anchorQ: aq, anchorR: ar };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   function newFallingPiece(shapeSlot) {
+    const spot = findSpawn(shapeSlot.shape);
+    if (spot) return { shape: shapeSlot.shape, ...spot };
+    // The board genuinely has no room for this molecule in any rotation.
+    // Return the default position and let the caller's placement check end
+    // the game.
     const [q, r] = spawnAxial(shapeSlot.shape);
     return { shape: shapeSlot.shape, rotationIndex: 0, anchorQ: q, anchorR: r };
   }
