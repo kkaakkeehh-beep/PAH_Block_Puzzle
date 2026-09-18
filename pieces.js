@@ -37,7 +37,11 @@ const PAH_SHAPES = [
     offsets: [[0, 0], [1, 0], [2, -1], [3, -1], [4, -2]] },
   { name: "Pentacene", formula: "C22H14", color: "#9d4edd", weight: 1,
     offsets: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]] },
-  { name: "Coronene", formula: "C24H12", color: "#f72585", weight: 1,
+  // Fractional because 1 is as low as an integer weight goes and coronene
+  // still came out at a third of all pieces on Expert: seven rings against a
+  // difficulty factor of 2.3 is a 148x multiplier, so the exponent swamps
+  // the weight.
+  { name: "Coronene", formula: "C24H12", color: "#f72585", weight: 0.6,
     offsets: [[0, 0], [1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]] },
 ];
 

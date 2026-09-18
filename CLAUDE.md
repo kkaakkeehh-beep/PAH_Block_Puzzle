@@ -61,20 +61,24 @@ The user is a chemist. Rendering that is merely decorative is a bug here.
 ## Piece frequency
 
 `pickRandomShape` weights each molecule by `weight * factor^(rings - 1)`, so
-ring count dominates at higher difficulties. Two things about that are
-deliberate and should not be "fixed" on sight:
+ring count dominates at higher difficulties — seven rings against Expert's
+factor of 2.3 is a 148× multiplier, which swamps the weight entirely. Two
+weights are therefore set below what ring count alone would give, and should
+not be "corrected" on sight:
 
-- **Coronene really does take about a third of all pieces on Expert** (35.8%),
-  because seven rings against a factor of 2.3 is a 148× multiplier. The user
-  plays this and considers it fine: it is a compact 3×3 blob that packs
-  densely and helps complete rows, so a high share of it is not punishing.
-- **Picene is weighted below its ring count would suggest** (1, same as
-  pentacene). Five rings spanning five columns in a zigzag leaves notches
-  wherever it lands, which is what actually makes a board unwinnable.
+- **Picene, 1** (same as pentacene). Five rings spanning five columns in a
+  zigzag leaves notches wherever it lands, which is what actually makes a
+  board unwinnable.
+- **Coronene, 0.6** — fractional because 1 is as low as an integer goes and
+  it still came out at about a third of all Expert pieces. Note it is not
+  punishing in the way picene is: a compact 3×3 blob packs densely and helps
+  complete rows. It was lowered because that share was simply too high, not
+  because the piece is hard.
 
 Ring count is a poor proxy for how hard a piece is to place. Compare the
 tightest offset-space footprint across a shape's rotations before changing a
-weight.
+weight, and check the resulting shares at all four difficulty factors rather
+than reasoning from the weight alone.
 
 ## Testing
 
