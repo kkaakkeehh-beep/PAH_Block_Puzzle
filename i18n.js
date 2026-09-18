@@ -750,7 +750,8 @@ let currentLang = "en";
 // the two Chinese translations fits -- zh-Hant, zh-HK and zh-MO are all
 // Traditional despite not being zh-TW.
 function detectDefaultLang() {
-  const stored = localStorage.getItem(LANG_STORAGE_KEY);
+  let stored = null;
+  try { stored = localStorage.getItem(LANG_STORAGE_KEY); } catch (e) { /* storage disabled */ }
   if (stored && TRANSLATIONS[stored]) return stored;
   const keys = Object.keys(TRANSLATIONS);
   const tags = (navigator.languages && navigator.languages.length)
@@ -786,7 +787,7 @@ function applyTranslations() {
 function setLanguage(lang) {
   if (!TRANSLATIONS[lang]) return;
   currentLang = lang;
-  localStorage.setItem(LANG_STORAGE_KEY, lang);
+  try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch (e) { /* storage disabled */ }
   applyTranslations();
   const select = document.getElementById("lang-select");
   if (select) select.value = lang;
