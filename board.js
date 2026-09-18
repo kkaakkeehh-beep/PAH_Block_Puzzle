@@ -67,7 +67,55 @@ function clearFullRows(board, shiftDown) {
     const [nq, nr] = offsetToAxial(col, row + shift);
     newBoard.set(axialKey(nq, nr), cell);
   }
-  return { cleared: fullRows, board: newBoard };
+  return { cleared: fullRows, board: shiftDown ? dropStrandedCells(newBoard) : newBoard };
+}
+
+// Shifting rows down does not always leave the stack resting on itself.
+// Flat-top gravity has one candidate straight below, so a rigid vertical
+// shift preserves whatever held each cell up. Pointy-top gravity has two --
+// the cell below plus one diagonal neighbour -- and which diagonal it is
+// flips with row parity, so moving a cell an odd number of rows swaps its
+// supports and can leave it holding on to nothing. Those cells stayed locked
+// in mid-air after a line clear.
+//
+// This moves *only* the cells the shift stranded: ones where every cell
+// gravity could carry them into is free, which is precisely the test the
+// falling piece itself uses to decide it has landed. A cell resting on a
+// diagonal neighbour keeps its support and does not budge, so the stack is
+// not re-settled and the board does not collapse -- the earlier attempt,
+// which dropped anything with a gap directly beneath it, treated the locked
+// stack as loose grains and compacted the whole board.
+//
+// Only called for the falling mode; placing mode deliberately leaves the
+// rest of the board alone when rows clear.
+function dropStrandedCells(board) {
+  const rowOf = (key) => {
+    const [q, r] = key.split(',').map(Number);
+    return axialToOffset(q, r)[1];
+  };
+  let moved = true;
+  while (moved) {
+    moved = false;
+    // Lowest cells first, so one never falls into a space that the cell
+    // beneath it is about to vacate.
+    const keys = [...board.keys()].sort((a, b) => rowOf(b) - rowOf(a));
+    for (const key of keys) {
+      const cell = board.get(key);
+      if (!cell) continue;
+      const [q, r] = key.split(',').map(Number);
+      const steps = fallStepCandidates(q, r).filter(([nq, nr]) => {
+        const [ncol, nrow] = axialToOffset(nq, nr);
+        return isInBounds(ncol, nrow);
+      });
+      if (steps.length === 0) continue;
+      if (!steps.every(([nq, nr]) => !board.has(axialKey(nq, nr)))) continue;
+      const [nq, nr] = steps[0];
+      board.delete(key);
+      board.set(axialKey(nq, nr), cell);
+      moved = true;
+    }
+  }
+  return board;
 }
 
 function computeBoardLayout(canvas) {

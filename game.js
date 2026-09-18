@@ -286,7 +286,11 @@
     flashRows = cleared;
     flashTimer = CLEAR_FLASH_MS;
     pendingClearBoard = newBoard;
-    pendingClearCallback = afterClear;
+    // Cascade: re-settling the stack after a clear can complete another row,
+    // and one left sitting there full looks broken. Checking again once the
+    // flash has swapped the board in scores each round separately, so a chain
+    // pays out like the combo it is.
+    pendingClearCallback = () => applyLineClears(afterClear);
   }
 
   function endGame() {
