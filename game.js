@@ -491,6 +491,16 @@
     updateHud();
 
     applyLineClears(() => {
+      // The drawn deadline is a real boundary, not decoration: once the
+      // settled stack reaches above it the round is over. Every molecule
+      // *enters* the board inside that band and falls out of it, so this can
+      // only be judged after a piece comes to rest -- and it is judged after
+      // line clears, so a row completed by the very piece that reached up
+      // there still saves you.
+      if (stackAboveDeadline()) {
+        endGame();
+        return;
+      }
       current = newFallingPiece(takeFromQueue());
       holdUsed = false;
       lockTimer = null;
@@ -498,6 +508,14 @@
       updateHud();
       if (!canPlaceCells(board, fallCells(current))) endGame();
     });
+  }
+
+  function stackAboveDeadline() {
+    for (const key of board.keys()) {
+      const [q, r] = key.split(',').map(Number);
+      if (axialToOffset(q, r)[1] < SPAWN_ROW) return true;
+    }
+    return false;
   }
 
   function takeFromQueue() {
@@ -1005,8 +1023,11 @@
 
   // ---------- rendering ----------
 
-  // Marks the boundary between SPAWN_ROW-1 and SPAWN_ROW: stack up to (or
-  // past) it in the spawn columns and the next piece won't fit.
+  // Marks the boundary above SPAWN_ROW, which stackAboveDeadline() enforces:
+  // a settled cell anywhere past this ends the round. Molecules all *enter*
+  // the board inside the band above it and fall out, so the rule is judged
+  // only once a piece comes to rest.
+  //
   // The threshold is not a straight line. A hex grid staggers the cells of
   // one row by half a cell from column to column, so the height you must not
   // stack past alternates as you go across -- the old straight line took the
