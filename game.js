@@ -773,7 +773,7 @@
             [move, '←  →'],
             [t('controls.rotate'), '↑  /  R'],
             [t('controls.softDrop'), '↓'],
-            [t('controls.hardDrop'), 'Space  ·  ↓↓'],
+            [t('controls.hardDrop'), 'Space'],
             [t('game.hold'), 'C  /  Shift'],
             [t('game.pause'), 'P'],
           ]],
@@ -1048,31 +1048,32 @@
     requestAnimationFrame(tick);
   }
 
-  // Pressing down steps the piece one row; pressing it twice quickly drops
-  // it the rest of the way. Shared by the on-screen button and the Down
-  // arrow key.
-  //
-  // The first press still soft-drops right away instead of waiting to see
-  // whether a second one follows, so the control never feels laggy -- a hard
-  // drop that starts one row lower lands in exactly the same place. The
-  // timer resets after a hard drop so a third press doesn't immediately slam
-  // the piece that just spawned.
-  //
-  // Auto-repeat from a held key is excluded: its events are milliseconds
-  // apart, so without this, holding Down would hard-drop instantly rather
-  // than gliding the piece down.
-  const DOUBLE_PRESS_MS = 300;
-  let lastDownPress = 0;
+  function softDrop() {
+    if (!tryMoveDown()) fallLockPiece();
+  }
 
-  function pressDown(isAutoRepeat) {
+  // Tapping the on-screen down button twice quickly drops the piece the rest
+  // of the way. Touch only: the keyboard has Space for that, and leaving the
+  // arrow key out of it also means a held key can just glide the piece down
+  // without its auto-repeat looking like a double press.
+  //
+  // The first tap still soft-drops right away instead of waiting to see
+  // whether a second one follows, so the button never feels laggy -- a hard
+  // drop that starts one row lower lands in exactly the same place. The
+  // timer resets afterwards so a third tap doesn't immediately slam the
+  // piece that just spawned.
+  const DOUBLE_TAP_MS = 300;
+  let lastDownTap = 0;
+
+  function tapDown() {
     const now = performance.now();
-    if (!isAutoRepeat && now - lastDownPress < DOUBLE_PRESS_MS) {
-      lastDownPress = 0;
+    if (now - lastDownTap < DOUBLE_TAP_MS) {
+      lastDownTap = 0;
       hardDrop();
       return;
     }
-    lastDownPress = isAutoRepeat ? 0 : now;
-    if (!tryMoveDown()) fallLockPiece();
+    lastDownTap = now;
+    softDrop();
   }
 
   function bindControls() {
@@ -1085,7 +1086,7 @@
       switch (e.key) {
         case 'ArrowLeft': tryMoveHorizontal(-1); e.preventDefault(); break;
         case 'ArrowRight': tryMoveHorizontal(1); e.preventDefault(); break;
-        case 'ArrowDown': pressDown(e.repeat); e.preventDefault(); break;
+        case 'ArrowDown': softDrop(); e.preventDefault(); break;
         case 'ArrowUp': case 'r': case 'R': tryRotate(); e.preventDefault(); break;
         case ' ': hardDrop(); e.preventDefault(); break;
         case 'c': case 'C': case 'Shift': holdPiece(); e.preventDefault(); break;
@@ -1095,7 +1096,7 @@
     const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (screen === 'game' && mode === 'fall' && running && !paused && current) fn(); });
     bind('btn-left', () => tryMoveHorizontal(-1));
     bind('btn-right', () => tryMoveHorizontal(1));
-    bind('btn-down', () => pressDown(false));
+    bind('btn-down', tapDown);
     bind('btn-rotate', tryRotate);
     bind('btn-drop', hardDrop);
 
