@@ -29,7 +29,11 @@ const PAH_SHAPES = [
     offsets: [[0, 0], [1, 0], [2, 0], [3, 0]] },
   { name: "Triphenylene", formula: "C18H12", color: "#577590", weight: 3,
     offsets: [[0, 0], [1, 0], [0, -1], [-1, 1]] },
-  { name: "Picene", formula: "C22H14", color: "#277da1", weight: 2,
+  // Weight 1, not 2: picene is the awkwardest piece in the set -- five rings
+  // spanning five columns in a zigzag, so it leaves notches wherever it
+  // lands -- and it was turning up twice as often as pentacene, the other
+  // five-ring molecule, which is straight and tucks against a wall.
+  { name: "Picene", formula: "C22H14", color: "#277da1", weight: 1,
     offsets: [[0, 0], [1, 0], [2, -1], [3, -1], [4, -2]] },
   { name: "Pentacene", formula: "C22H14", color: "#9d4edd", weight: 1,
     offsets: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]] },

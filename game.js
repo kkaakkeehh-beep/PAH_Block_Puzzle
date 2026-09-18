@@ -31,11 +31,12 @@
   const MIN_DROP_MS = 120;
   const LINES_PER_LEVEL = 8;
   const NEXT_COUNT = 3;
-  // Modern Tetris uses 500ms, but that is tuned for four-cell pieces on a
-  // ten-wide board. Here gravity starts at 800ms a row, so half a second of
-  // hang after touchdown reads as the molecule stalling in mid-air. 300ms
-  // still removes the old instant lock without the piece looking stuck.
-  const LOCK_DELAY_MS = 300;
+  // 500ms, matching modern Tetris. Worth noting it is a large fraction of
+  // this game's 800ms opening gravity step, so raising it further would have
+  // a grounded molecule visibly hanging in mid-air; 800 would be a full drop
+  // step and should not be tried. Six resets caps the worst-case stall at
+  // about three and a half seconds.
+  const LOCK_DELAY_MS = 500;
   const MAX_LOCK_RESETS = 6;
   const TIME_SPEEDUP_INTERVAL_MS = 20000;
   const DROP_MS_PER_LEVEL = 50;
