@@ -394,7 +394,7 @@ function drawLockedCells(ctx, board, flashRowSet, flashOn) {
 // Inverse of axialToPixel + cube rounding, for pointer placement.
 function pixelToAxial(px, py, size) {
   let q, r;
-  if (ORIENTATION === 'flat') {
+  if (getOrientation() === 'flat') {
     q = px / (1.5 * size);
     r = py / (SQRT3 * size) - q / 2;
   } else {

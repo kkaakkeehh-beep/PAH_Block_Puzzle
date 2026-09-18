@@ -2,18 +2,10 @@
   const FALL_COLS = 7, FALL_ROWS = 14;
   const PLACE_COLS = 7, PLACE_ROWS = 9;
   const SPAWN_ROW = 2;
-  // Centers the piece's own bounding width, not just a fixed column -- a
-  // fixed center column overflows the board for wide pieces (e.g. Pentacene
-  // is 5 cells wide), which made them invalid the instant they spawned and
-  // falsely triggered game over.
-  //
-  // The row is then the highest (smallest-index) one where every cell of the
-  // piece still lands at row >= 0, rather than a fixed SPAWN_ROW -- a fixed
-  // row leaves almost no buffer above a moderately tall stack, so a column
-  // near the spawn point could block new pieces well before the board was
-  // actually full.
   // The anchor column that centres a rotation's own bounding width, clamped
-  // so no cell falls off either side.
+  // so no cell falls off either side. A fixed centre column overflowed the
+  // board for wide pieces (pentacene is five cells across), which made them
+  // invalid the instant they spawned and falsely triggered game over.
   function idealSpawnCol(offsets) {
     const dqs = offsets.map(([dq]) => dq);
     const minDq = Math.min(...dqs), maxDq = Math.max(...dqs);
@@ -22,6 +14,10 @@
     return Math.max(-minDq, Math.min(col, NUM_COLS - 1 - maxDq));
   }
 
+  // The fallback position, used only when findSpawn finds nowhere the piece
+  // actually fits. The row is the highest one where every cell still lands at
+  // row >= 0, rather than a fixed SPAWN_ROW, which left almost no buffer
+  // above a moderately tall stack.
   function spawnAxial(shape) {
     const offsets = shape.rotationStates[0];
     const col = idealSpawnCol(offsets);
@@ -49,8 +45,15 @@
   const LEGACY_HIGH_SCORE_KEY = 'pahBlockPuzzleHighScore';
   const HIGH_SCORE_KEYS = { fall: 'pahBlockPuzzleHighScore_fall', place: 'pahBlockPuzzleHighScore_place' };
 
+  // Reads are guarded like the writes are: a browser set to block all site
+  // data throws on any localStorage access, not only on setItem, and this
+  // runs from updateHud on every frame.
   function getStoredBest(forMode) {
-    return Number(localStorage.getItem(HIGH_SCORE_KEYS[forMode])) || 0;
+    try {
+      return Number(localStorage.getItem(HIGH_SCORE_KEYS[forMode])) || 0;
+    } catch (e) {
+      return 0;
+    }
   }
 
   // Which molecules the player has actually landed, for the home-screen
@@ -258,7 +261,9 @@
     bestModeTag.textContent = ' · ' + modeName(mode);
     const stored = getStoredBest(mode);
     const best = Math.max(stored, score);
-    if (best > stored) try { localStorage.setItem(HIGH_SCORE_KEYS[mode], String(best)); } catch (e) { /* storage full or disabled */ }
+    if (best > stored) {
+      try { localStorage.setItem(HIGH_SCORE_KEYS[mode], String(best)); } catch (e) { /* storage full or disabled */ }
+    }
     bestScoreEl.textContent = best;
     if (mode === 'fall') {
       currentLabelEl.textContent = current ? `${current.shape.name} (${current.shape.formula})` : '';
