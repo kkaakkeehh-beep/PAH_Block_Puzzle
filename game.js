@@ -286,8 +286,15 @@
   // app can post to Stories/feed), so its button just copies the message
   // like the generic "Copy link" fallback -- X and LINE both have real
   // share-intent URLs, so those are plain links.
+  // Left untranslated on purpose: a hashtag only gathers posts together if
+  // everyone writes it the same way, so these stay identical in all sixteen
+  // languages even though the message around them is translated.
+  const SHARE_HASHTAGS = '#PAHBlockPuzzle #Puzzle';
+
   function setupShareButtons() {
-    const text = t('share.message').replace('{score}', score) + '\n' + runDetailParts().join(' / ');
+    const text = t('share.message').replace('{score}', score)
+      + '\n' + runDetailParts().join(' / ')
+      + '\n' + SHARE_HASHTAGS;
     // Not location.href: that carries along whatever query string the page
     // happens to have been opened with, and those end up in the shared link.
     const url = location.origin + location.pathname;
@@ -344,12 +351,47 @@
     return false;
   }
 
-  const ROTATE_KICKS = [[0, 0], [1, 0], [-1, 0], [0, -1], [0, 1], [-1, 1], [1, -1]];
+  // Wall kicks, as (column, row) offsets rather than axial ones so that
+  // "nudge two columns right" means exactly that at any position.
+  //
+  // The range has to cover the widest molecule. Rotating pentacene from its
+  // upright form sweeps all five rings to one side of the anchor, so against
+  // a wall it needs the anchor moved up to four columns to fit -- with the
+  // old one-cell kick set that rotation simply failed, which is why pieces
+  // felt stuck at the edges.
+  //
+  // Ordered by total displacement, preferring a sideways nudge over moving
+  // the piece vertically, so the closest legal position wins and a rotation
+  // never teleports further than it must.
+  //
+  // The row range is deliberately lopsided. Downward kicks cost nothing --
+  // the piece is falling anyway -- so two of them are allowed, which is what
+  // a wide molecule needs to turn just after it spawns. Upward kicks are
+  // capped at one, because lifting a piece further would let a player stall
+  // a landing indefinitely by rotating. A molecule wedged against the floor
+  // with no room to turn then simply refuses, as it should.
+  const ROTATE_KICKS = (() => {
+    const kicks = [];
+    for (let dcol = -4; dcol <= 4; dcol++) {
+      for (let drow = -1; drow <= 2; drow++) kicks.push([dcol, drow]);
+    }
+    kicks.sort((a, b) => {
+      const spanA = Math.abs(a[0]) + Math.abs(a[1]);
+      const spanB = Math.abs(b[0]) + Math.abs(b[1]);
+      if (spanA !== spanB) return spanA - spanB;
+      if (Math.abs(a[1]) !== Math.abs(b[1])) return Math.abs(a[1]) - Math.abs(b[1]);
+      if (a[0] !== b[0]) return b[0] - a[0];
+      return b[1] - a[1];
+    });
+    return kicks;
+  })();
 
   function tryRotate() {
     const nextIndex = (current.rotationIndex + 1) % current.shape.rotationStates.length;
-    for (const [kq, kr] of ROTATE_KICKS) {
-      const trial = { ...current, rotationIndex: nextIndex, anchorQ: current.anchorQ + kq, anchorR: current.anchorR + kr };
+    const [col, row] = axialToOffset(current.anchorQ, current.anchorR);
+    for (const [dcol, drow] of ROTATE_KICKS) {
+      const [aq, ar] = offsetToAxial(col + dcol, row + drow);
+      const trial = { ...current, rotationIndex: nextIndex, anchorQ: aq, anchorR: ar };
       if (canPlaceCells(board, fallCells(trial))) { current = trial; return true; }
     }
     return false;
