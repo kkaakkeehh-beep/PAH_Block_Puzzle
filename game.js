@@ -31,8 +31,12 @@
   const MIN_DROP_MS = 120;
   const LINES_PER_LEVEL = 8;
   const NEXT_COUNT = 3;
-  const LOCK_DELAY_MS = 500;
-  const MAX_LOCK_RESETS = 10;
+  // Modern Tetris uses 500ms, but that is tuned for four-cell pieces on a
+  // ten-wide board. Here gravity starts at 800ms a row, so half a second of
+  // hang after touchdown reads as the molecule stalling in mid-air. 300ms
+  // still removes the old instant lock without the piece looking stuck.
+  const LOCK_DELAY_MS = 300;
+  const MAX_LOCK_RESETS = 6;
   const TIME_SPEEDUP_INTERVAL_MS = 20000;
   const DROP_MS_PER_LEVEL = 50;
   const LEGACY_HIGH_SCORE_KEY = 'pahBlockPuzzleHighScore';
@@ -162,8 +166,9 @@
   // the instant it lands. At high levels the drop interval falls to 120ms,
   // which left no chance at all to slide or turn a piece after it grounded.
   // Moving or rotating restarts the clock, but only so many times -- without
-  // that cap a player could keep a piece alive indefinitely. A soft drop or
-  // hard drop still locks immediately, so there is always a way to commit.
+  // that cap a player could keep a piece alive indefinitely, and even with
+  // it the worst case is about two seconds. A soft drop or hard drop still
+  // locks immediately, so there is always a way to commit.
   let lockTimer = null;
   let lockResets = 0;
   let elapsedMs = 0;
