@@ -568,6 +568,7 @@
   }
 
   function rotateSlot(index) {
+    if (!running || gameOver) return;
     const slot = tray[index];
     if (!slot) return;
     slot.rotationIndex = (slot.rotationIndex + 1) % slot.shape.rotationStates.length;
