@@ -1286,7 +1286,7 @@
       }
     });
 
-    const bind = (id, fn) => document.getElementById(id).addEventListener('click', () => { if (screen === 'game' && mode === 'fall' && running && !paused && current) fn(); });
+    const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', () => { if (screen === 'game' && mode === 'fall' && running && !paused && current) fn(); }); };
     bind('btn-left', () => tryMoveHorizontal(-1));
     bind('btn-right', () => tryMoveHorizontal(1));
     bind('btn-down', tapDown);
