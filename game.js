@@ -1347,12 +1347,14 @@
   // One-time migration: seed both per-mode bests from the old shared one so
   // nobody's existing high score just disappears.
   (function migrateLegacyHighScore() {
-    const legacy = localStorage.getItem(LEGACY_HIGH_SCORE_KEY);
-    if (legacy === null) return;
-    for (const key of Object.values(HIGH_SCORE_KEYS)) {
-      if (localStorage.getItem(key) === null) localStorage.setItem(key, legacy);
-    }
-    localStorage.removeItem(LEGACY_HIGH_SCORE_KEY);
+    try {
+      const legacy = localStorage.getItem(LEGACY_HIGH_SCORE_KEY);
+      if (legacy === null) return;
+      for (const key of Object.values(HIGH_SCORE_KEYS)) {
+        if (localStorage.getItem(key) === null) localStorage.setItem(key, legacy);
+      }
+      localStorage.removeItem(LEGACY_HIGH_SCORE_KEY);
+    } catch (e) { /* storage disabled */ }
   })();
 
   buildPlacePanel();
