@@ -31,6 +31,8 @@
   const MIN_DROP_MS = 120;
   const LINES_PER_LEVEL = 8;
   const NEXT_COUNT = 3;
+  const LOCK_DELAY_MS = 500;
+  const MAX_LOCK_RESETS = 10;
   const TIME_SPEEDUP_INTERVAL_MS = 20000;
   const DROP_MS_PER_LEVEL = 50;
   const LEGACY_HIGH_SCORE_KEY = 'pahBlockPuzzleHighScore';
@@ -156,6 +158,14 @@
   let holdUsed = false;
   let dropIntervalMs = BASE_DROP_MS;
   let dropAccumulator = 0;
+  // Grace period once a piece touches down, so gravity alone can't lock it
+  // the instant it lands. At high levels the drop interval falls to 120ms,
+  // which left no chance at all to slide or turn a piece after it grounded.
+  // Moving or rotating restarts the clock, but only so many times -- without
+  // that cap a player could keep a piece alive indefinitely. A soft drop or
+  // hard drop still locks immediately, so there is always a way to commit.
+  let lockTimer = null;
+  let lockResets = 0;
   let elapsedMs = 0;
   let lastFrameTime = null;
 
@@ -339,9 +349,20 @@
     return getPieceCells(piece.shape, piece.rotationIndex, piece.anchorQ, piece.anchorR);
   }
 
+  // Called after any successful player move while the piece is grounded.
+  function restartLockDelay() {
+    if (lockTimer === null || lockResets >= MAX_LOCK_RESETS) return;
+    lockResets++;
+    lockTimer = LOCK_DELAY_MS;
+  }
+
   function tryMoveHorizontal(dq) {
     const trial = { ...current, anchorQ: current.anchorQ + dq };
-    if (canPlaceCells(board, fallCells(trial))) { current = trial; return true; }
+    if (canPlaceCells(board, fallCells(trial))) {
+      current = trial;
+      restartLockDelay();
+      return true;
+    }
     return false;
   }
 
@@ -400,7 +421,11 @@
     for (const [dcol, drow] of ROTATE_KICKS) {
       const [aq, ar] = offsetToAxial(col + dcol, row + drow);
       const trial = { ...current, rotationIndex: nextIndex, anchorQ: aq, anchorR: ar };
-      if (canPlaceCells(board, fallCells(trial))) { current = trial; return true; }
+      if (canPlaceCells(board, fallCells(trial))) {
+        current = trial;
+        restartLockDelay();
+        return true;
+      }
     }
     return false;
   }
@@ -422,6 +447,8 @@
     applyLineClears(() => {
       current = newFallingPiece(takeFromQueue());
       holdUsed = false;
+      lockTimer = null;
+      lockResets = 0;
       updateHud();
       if (!canPlaceCells(board, fallCells(current))) endGame();
     });
@@ -442,6 +469,8 @@
     held = { shape: current.shape, rotationIndex: 0 };
     current = newFallingPiece(incoming || takeFromQueue());
     holdUsed = true;
+    lockTimer = null;
+    lockResets = 0;
     updateHud();
     if (!canPlaceCells(board, fallCells(current))) endGame();
   }
@@ -911,6 +940,8 @@
     if (mode === 'fall') {
       dropIntervalMs = BASE_DROP_MS;
       dropAccumulator = 0;
+      lockTimer = null;
+      lockResets = 0;
       elapsedMs = 0;
       lastFrameTime = null;
       held = null;
@@ -1087,10 +1118,21 @@
         updateHud();
       }
       dropIntervalMs = dropIntervalForLevel(level);
-      dropAccumulator += dt;
-      if (current && dropAccumulator >= dropIntervalMs) {
-        dropAccumulator = 0;
-        if (!tryMoveDown()) fallLockPiece();
+      if (current) {
+        if (tryFall(current)) {
+          // Airborne: normal gravity, and any lock countdown is abandoned --
+          // a piece slid off its ledge should fall rather than freeze.
+          lockTimer = null;
+          dropAccumulator += dt;
+          if (dropAccumulator >= dropIntervalMs) {
+            dropAccumulator = 0;
+            tryMoveDown();
+          }
+        } else {
+          if (lockTimer === null) lockTimer = LOCK_DELAY_MS;
+          lockTimer -= dt;
+          if (lockTimer <= 0) fallLockPiece();
+        }
       }
     }
 

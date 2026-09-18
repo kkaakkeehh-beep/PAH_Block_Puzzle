@@ -6,6 +6,9 @@
   --accent-dark: #1d4e54;
   --grid-line: rgba(34, 38, 43, 0.08);
   --shadow: 0 2px 10px rgba(30, 30, 20, 0.12);
+  /* Read by the canvas code, which cannot use CSS variables directly. */
+  --cell-fill: rgba(255, 255, 255, 0.35);
+  --cell-stroke: rgba(60, 70, 90, 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,6 +20,11 @@
     --accent-dark: #3a8983;
     --grid-line: rgba(255, 255, 255, 0.08);
     --shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
+    /* Empty cells have to recede here as they do in the light theme. Left
+       at the light values, a 35%-white fill over the dark board made the
+       empty grid the brightest thing on the screen. */
+    --cell-fill: rgba(255, 255, 255, 0.05);
+    --cell-stroke: rgba(255, 255, 255, 0.1);
   }
 }
 

@@ -65,6 +65,7 @@ function clearFullRows(board, shiftDown) {
 }
 
 function computeBoardLayout(canvas) {
+  refreshBoardPalette();
   const rect = canvas.parentElement.getBoundingClientRect();
   const availH = Math.max(240, window.innerHeight * 0.6);
   const sizeFromHeight = availH / (SQRT3 * (NUM_ROWS + 0.5));
@@ -300,11 +301,27 @@ function drawDoubleBonds(ctx, cx, cy, size, edges, color, lineWidth) {
   }
 }
 
+// Canvas can't reference CSS variables, so the empty-cell colours are read
+// out of them once and re-read when the colour scheme changes. Hard-coding
+// them left the board light-themed in dark mode, where a 35%-white fill made
+// the empty grid the brightest thing on the screen.
+const boardPalette = {
+  cellFill: 'rgba(255,255,255,0.35)',
+  cellStroke: 'rgba(60,70,90,0.18)',
+};
+
+function refreshBoardPalette() {
+  const style = getComputedStyle(document.documentElement);
+  const read = (name, fallback) => style.getPropertyValue(name).trim() || fallback;
+  boardPalette.cellFill = read('--cell-fill', boardPalette.cellFill);
+  boardPalette.cellStroke = read('--cell-stroke', boardPalette.cellStroke);
+}
+
 function drawBoardGrid(ctx) {
   for (let col = 0; col < NUM_COLS; col++) {
     for (let row = 0; row < NUM_ROWS; row++) {
       const [cx, cy] = cellCenter(col, row);
-      drawHex(ctx, cx, cy, hexSize * 0.96, 'rgba(255,255,255,0.35)', 'rgba(60,70,90,0.18)', 1);
+      drawHex(ctx, cx, cy, hexSize * 0.96, boardPalette.cellFill, boardPalette.cellStroke, 1);
     }
   }
 }
@@ -330,4 +347,11 @@ function pixelToAxial(px, py, size) {
   if (dx > dy && dx > dz) ix = -iy - iz;
   else if (dz > dy) iz = -ix - iy;
   return [ix, iz];
+}
+
+// The board is redrawn every frame, so a palette refresh on the scheme
+// change is enough -- no explicit repaint needed.
+if (window.matchMedia) {
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  if (darkScheme.addEventListener) darkScheme.addEventListener('change', refreshBoardPalette);
 }
