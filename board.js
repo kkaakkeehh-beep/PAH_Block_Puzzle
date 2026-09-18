@@ -50,14 +50,18 @@ function clearFullRows(board, shiftDown) {
   for (const [row, cols] of rowCols) if (cols.size >= NUM_COLS) fullRows.push(row);
   if (fullRows.length === 0) return { cleared: [], board };
   fullRows.sort((a, b) => a - b);
+  const fullRowSet = new Set(fullRows);
 
   const newBoard = new Map();
   for (const [key, cell] of board) {
     const [q, r] = key.split(',').map(Number);
     const [col, row] = axialToOffset(q, r);
-    if (fullRows.includes(row)) continue;
+    if (fullRowSet.has(row)) continue;
     if (!shiftDown) { newBoard.set(key, cell); continue; }
-    const shift = fullRows.filter(cr => cr > row).length;
+    let shift = 0;
+    for (let i = fullRows.length - 1; i >= 0; i--) {
+      if (fullRows[i] > row) shift++; else break;
+    }
     const [nq, nr] = offsetToAxial(col, row + shift);
     newBoard.set(axialKey(nq, nr), cell);
   }
