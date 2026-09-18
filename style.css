@@ -582,6 +582,9 @@ button:active { transform: scale(0.95); }
   padding: 28px 32px;
   text-align: center;
   box-shadow: var(--shadow);
+  /* Caps the width so the share buttons wrap into rows instead of
+     stretching the card across the screen. */
+  max-width: min(360px, calc(100vw - 32px));
 }
 
 .game-over-card h2 { margin-top: 0; }
@@ -643,6 +646,9 @@ button:active { transform: scale(0.95); }
 .share-x { background: #000; }
 .share-instagram { background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4); }
 .share-line { background: #06c755; }
+.share-whatsapp { background: #25d366; }
+.share-telegram { background: #229ed9; }
+.share-email { background: #5b6b7a; }
 .share-copy { background: var(--accent); }
 
 #share-copied-note {

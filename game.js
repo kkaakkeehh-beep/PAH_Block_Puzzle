@@ -98,6 +98,9 @@
   const shareXBtn = document.getElementById('share-x-btn');
   const shareInstagramBtn = document.getElementById('share-instagram-btn');
   const shareLineBtn = document.getElementById('share-line-btn');
+  const shareWhatsappBtn = document.getElementById('share-whatsapp-btn');
+  const shareTelegramBtn = document.getElementById('share-telegram-btn');
+  const shareEmailBtn = document.getElementById('share-email-btn');
   const shareCopyBtn = document.getElementById('share-copy-btn');
   const shareCopiedNote = document.getElementById('share-copied-note');
   const fallPanel = document.getElementById('fall-panel');
@@ -302,6 +305,11 @@
 
     shareXBtn.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url);
     shareLineBtn.href = 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text);
+    shareTelegramBtn.href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text);
+    // WhatsApp and mailto take one field each, so the link goes inside it.
+    shareWhatsappBtn.href = 'https://wa.me/?text=' + encodeURIComponent(text + '\n' + url);
+    shareEmailBtn.href = 'mailto:?subject=' + encodeURIComponent('PAH Block Puzzle')
+      + '&body=' + encodeURIComponent(text + '\n\n' + url);
 
     if (navigator.share) {
       shareNativeBtn.classList.remove('hidden');

@@ -55,7 +55,7 @@
      against a stale cached game.js -- which renders new markup with no
      event listeners bound to it. Bump ASSET_VERSION on every deploy that
      touches style.css or any of the scripts. -->
-<link rel="stylesheet" href="style.css?v=20260918c">
+<link rel="stylesheet" href="style.css?v=20260918d">
 </head>
 <body>
 <div id="app">
@@ -283,10 +283,18 @@
       <p id="game-over-best"></p>
       <p id="new-best" class="hidden" data-i18n="gameOver.newBest">New best score!</p>
       <button id="share-native-btn" class="hidden" data-i18n="share.button">Share</button>
+      <!-- On a phone the native Share button above covers everything the
+           device has installed, including the apps with no web share URL at
+           all (WeChat, KakaoTalk). These explicit buttons are mostly for
+           desktop, so they cover the platforms that between them reach the
+           languages the game is translated into. -->
       <div id="share-row">
         <a id="share-x-btn" class="share-btn share-x" href="#" target="_blank" rel="noopener noreferrer">X</a>
-        <button id="share-instagram-btn" class="share-btn share-instagram">Instagram</button>
+        <a id="share-whatsapp-btn" class="share-btn share-whatsapp" href="#" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <a id="share-telegram-btn" class="share-btn share-telegram" href="#" target="_blank" rel="noopener noreferrer">Telegram</a>
         <a id="share-line-btn" class="share-btn share-line" href="#" target="_blank" rel="noopener noreferrer">LINE</a>
+        <button id="share-instagram-btn" class="share-btn share-instagram">Instagram</button>
+        <a id="share-email-btn" class="share-btn share-email" href="#" data-i18n="share.email">Email</a>
         <button id="share-copy-btn" class="share-btn share-copy" data-i18n="share.copyLink">Copy link</button>
       </div>
       <p id="share-copied-note" class="hidden" data-i18n="share.copied">Copied!</p>
@@ -305,10 +313,10 @@
   </div>
 </div>
 
-<script src="i18n.js?v=20260918c"></script>
-<script src="hexmath.js?v=20260918c"></script>
-<script src="pieces.js?v=20260918c"></script>
-<script src="board.js?v=20260918c"></script>
-<script src="game.js?v=20260918c"></script>
+<script src="i18n.js?v=20260918d"></script>
+<script src="hexmath.js?v=20260918d"></script>
+<script src="pieces.js?v=20260918d"></script>
+<script src="board.js?v=20260918d"></script>
+<script src="game.js?v=20260918d"></script>
 </body>
 </html>

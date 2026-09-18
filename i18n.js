@@ -42,6 +42,7 @@ const TRANSLATIONS = {
     "game.hold": "Hold", "howto.holdTap": "Tap the Hold panel",
     "howto.pick": "Pick a molecule", "howto.move": "Move", "howto.place": "Place",
     "collection.title": "Molecules",
+    "share.email": "Email",
   },
   ja: {
     subtitle: "多環芳香族ブロックパズル",
@@ -86,6 +87,7 @@ const TRANSLATIONS = {
     "game.hold": "ホールド", "howto.holdTap": "ホールド欄をタップ",
     "howto.pick": "分子を選ぶ", "howto.move": "移動", "howto.place": "置く",
     "collection.title": "分子図鑑",
+    "share.email": "メール",
   },
   zh: {
     subtitle: "多环芳香烃方块拼图",
@@ -130,6 +132,7 @@ const TRANSLATIONS = {
     "game.hold": "暂存", "howto.holdTap": "点击暂存栏",
     "howto.pick": "选择分子", "howto.move": "移动", "howto.place": "放置",
     "collection.title": "分子图鉴",
+    "share.email": "邮件",
   },
   "zh-TW": {
     subtitle: "多環芳香烴方塊拼圖",
@@ -174,6 +177,7 @@ const TRANSLATIONS = {
     "game.hold": "暫存", "howto.holdTap": "點擊暫存欄",
     "howto.pick": "選擇分子", "howto.move": "移動", "howto.place": "放置",
     "collection.title": "分子圖鑑",
+    "share.email": "郵件",
   },
   ko: {
     subtitle: "다환 방향족 블록 퍼즐",
@@ -218,6 +222,7 @@ const TRANSLATIONS = {
     "game.hold": "홀드", "howto.holdTap": "홀드 칸을 탭",
     "howto.pick": "분자 선택", "howto.move": "이동", "howto.place": "놓기",
     "collection.title": "분자 도감",
+    "share.email": "이메일",
   },
   bg: {
     subtitle: "Пъзел с полициклични ароматни блокчета",
@@ -262,6 +267,7 @@ const TRANSLATIONS = {
     "game.hold": "Запази", "howto.holdTap": "Докоснете полето за запазване",
     "howto.pick": "Избор на молекула", "howto.move": "Преместване", "howto.place": "Поставяне",
     "collection.title": "Молекули",
+    "share.email": "Имейл",
   },
   de: {
     subtitle: "Polyzyklisches aromatisches Block-Puzzle",
@@ -306,6 +312,7 @@ const TRANSLATIONS = {
     "game.hold": "Halten", "howto.holdTap": "Auf das Halten-Feld tippen",
     "howto.pick": "Molekül wählen", "howto.move": "Bewegen", "howto.place": "Setzen",
     "collection.title": "Moleküle",
+    "share.email": "E-Mail",
   },
   et: {
     subtitle: "Polütsükliliste aromaatsete plokkide pusle",
@@ -350,6 +357,7 @@ const TRANSLATIONS = {
     "game.hold": "Hoia", "howto.holdTap": "Puuduta hoiukasti",
     "howto.pick": "Vali molekul", "howto.move": "Liiguta", "howto.place": "Aseta",
     "collection.title": "Molekulid",
+    "share.email": "E-post",
   },
   el: {
     subtitle: "Παζλ με πολυκυκλικά αρωματικά μπλοκ",
@@ -394,6 +402,7 @@ const TRANSLATIONS = {
     "game.hold": "Κράτηση", "howto.holdTap": "Πάτησε το πλαίσιο Κράτησης",
     "howto.pick": "Επιλογή μορίου", "howto.move": "Μετακίνηση", "howto.place": "Τοποθέτηση",
     "collection.title": "Μόρια",
+    "share.email": "Email",
   },
   es: {
     subtitle: "Rompecabezas de bloques aromáticos policíclicos",
@@ -438,6 +447,7 @@ const TRANSLATIONS = {
     "game.hold": "Reserva", "howto.holdTap": "Toca el panel de reserva",
     "howto.pick": "Elegir molécula", "howto.move": "Mover", "howto.place": "Colocar",
     "collection.title": "Moléculas",
+    "share.email": "Correo",
   },
   fr: {
     subtitle: "Puzzle de blocs aromatiques polycycliques",
@@ -482,6 +492,7 @@ const TRANSLATIONS = {
     "game.hold": "Réserve", "howto.holdTap": "Touchez la case Réserve",
     "howto.pick": "Choisir une molécule", "howto.move": "Déplacer", "howto.place": "Poser",
     "collection.title": "Molécules",
+    "share.email": "E-mail",
   },
   it: {
     subtitle: "Rompicapo a blocchi aromatici policiclici",
@@ -526,6 +537,7 @@ const TRANSLATIONS = {
     "game.hold": "Riserva", "howto.holdTap": "Tocca il riquadro Riserva",
     "howto.pick": "Scegli molecola", "howto.move": "Sposta", "howto.place": "Posiziona",
     "collection.title": "Molecole",
+    "share.email": "Email",
   },
   pl: {
     subtitle: "Układanka z wielopierścieniowych węglowodorów aromatycznych",
@@ -570,6 +582,7 @@ const TRANSLATIONS = {
     "game.hold": "Odłóż", "howto.holdTap": "Stuknij pole odłożenia",
     "howto.pick": "Wybierz cząsteczkę", "howto.move": "Przesuń", "howto.place": "Umieść",
     "collection.title": "Cząsteczki",
+    "share.email": "E-mail",
   },
   ru: {
     subtitle: "Головоломка из полициклических ароматических блоков",
@@ -614,6 +627,7 @@ const TRANSLATIONS = {
     "game.hold": "Резерв", "howto.holdTap": "Коснитесь поля резерва",
     "howto.pick": "Выбрать молекулу", "howto.move": "Переместить", "howto.place": "Поставить",
     "collection.title": "Молекулы",
+    "share.email": "Эл. почта",
   },
   uk: {
     subtitle: "Головоломка з поліциклічних ароматичних блоків",
@@ -658,6 +672,7 @@ const TRANSLATIONS = {
     "game.hold": "Резерв", "howto.holdTap": "Торкніться поля резерву",
     "howto.pick": "Вибрати молекулу", "howto.move": "Перемістити", "howto.place": "Поставити",
     "collection.title": "Молекули",
+    "share.email": "Ел. пошта",
   },
   fi: {
     subtitle: "Polysyklisten aromaattisten palikoiden pulmapeli",
@@ -702,6 +717,7 @@ const TRANSLATIONS = {
     "game.hold": "Varasto", "howto.holdTap": "Napauta varastoruutua",
     "howto.pick": "Valitse molekyyli", "howto.move": "Siirrä", "howto.place": "Aseta",
     "collection.title": "Molekyylit",
+    "share.email": "Sähköposti",
   },
 };
 
