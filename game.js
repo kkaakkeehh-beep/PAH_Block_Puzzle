@@ -1244,6 +1244,7 @@
 
   function softDrop() {
     if (!tryMoveDown()) fallLockPiece();
+    else dropAccumulator = 0;
   }
 
   // Tapping the on-screen down button twice quickly drops the piece the rest
