@@ -1196,7 +1196,7 @@
     const dt = Math.min(timestamp - lastFrameTime, 100);
     lastFrameTime = timestamp;
 
-    if (flashTimer > 0) {
+    if (flashTimer > 0 && !paused) {
       flashTimer -= dt;
       if (flashTimer <= 0) {
         flashRows = [];
