@@ -964,6 +964,10 @@
     screen = 'home';
     pendingMode = null;
     running = false;
+    flashRows = [];
+    flashTimer = 0;
+    pendingClearBoard = null;
+    pendingClearCallback = null;
     gameScreen.classList.add('hidden');
     levelBox.classList.add('hidden');
     hideAllPreGameScreens();
