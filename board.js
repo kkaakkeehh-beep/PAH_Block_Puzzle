@@ -31,8 +31,10 @@ function canPlaceCells(board, cells) {
 // cells[i] corresponds to shape.offsets[i] (getPieceCells maps offsets in
 // place), so a locked cell can remember whether its ring carried one of the
 // molecule's Clar sextets long after the piece itself is gone.
-function placeCells(board, cells, shape) {
-  const bonds = kekuleBondsForCells(cells);
+function placeCells(board, cells, shape, rotationIndex) {
+  const bonds = rotationIndex !== undefined
+    ? kekuleBondsForPiece(shape, rotationIndex)
+    : kekuleBondsForCells(cells);
   cells.forEach(([q, r], i) => {
     board.set(axialKey(q, r), { color: shape.color, bonds: bonds[i] });
   });

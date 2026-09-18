@@ -484,7 +484,7 @@
   }
 
   function fallLockPiece() {
-    placeCells(board, fallCells(current), current.shape);
+    placeCells(board, fallCells(current), current.shape, current.rotationIndex);
     markSeen(current.shape);
     score += current.shape.rotationStates[0].length * 10;
     current = null;
@@ -663,7 +663,7 @@
     if (!slot) return false;
     const cells = getPieceCells(slot.shape, slot.rotationIndex, anchorQ, anchorR);
     if (!canPlaceCells(board, cells)) return false;
-    placeCells(board, cells, slot.shape);
+    placeCells(board, cells, slot.shape, slot.rotationIndex);
     markSeen(slot.shape);
     score += cells.length * 10;
     tray[slotIndex] = null;
