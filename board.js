@@ -29,14 +29,21 @@ function canPlaceCells(board, cells) {
 }
 
 // cells[i] corresponds to shape.offsets[i] (getPieceCells maps offsets in
-// place), so a locked cell can remember whether its ring carried one of the
-// molecule's Clar sextets long after the piece itself is gone.
+// place), so a locked cell keeps the double bonds its own ring carried long
+// after the piece itself is gone.
+//
+// Each placement also gets a group id, so the board remembers which cells
+// were one molecule. Rings that are fused stay fused: a line clear may delete
+// part of a molecule, but whatever survives has to move as one body.
+let nextMoleculeGroup = 1;
+
 function placeCells(board, cells, shape, rotationIndex) {
   const bonds = rotationIndex !== undefined
     ? kekuleBondsForPiece(shape, rotationIndex)
     : kekuleBondsForCells(cells);
+  const group = nextMoleculeGroup++;
   cells.forEach(([q, r], i) => {
-    board.set(axialKey(q, r), { color: shape.color, bonds: bonds[i] });
+    board.set(axialKey(q, r), { color: shape.color, bonds: bonds[i], group });
   });
 }
 
@@ -54,65 +61,118 @@ function clearFullRows(board, shiftDown) {
   fullRows.sort((a, b) => a - b);
   const fullRowSet = new Set(fullRows);
 
+  // Cells are not shifted row by row here. Doing that moved each cell by the
+  // count of cleared rows beneath it, which differs across a molecule that
+  // straddled the clear and so pulled fused rings apart. Instead the cleared
+  // cells are simply removed and settleMolecules lets each surviving
+  // fragment fall as one body.
   const newBoard = new Map();
   for (const [key, cell] of board) {
     const [q, r] = key.split(',').map(Number);
-    const [col, row] = axialToOffset(q, r);
+    const [, row] = axialToOffset(q, r);
     if (fullRowSet.has(row)) continue;
-    if (!shiftDown) { newBoard.set(key, cell); continue; }
-    let shift = 0;
-    for (let i = fullRows.length - 1; i >= 0; i--) {
-      if (fullRows[i] > row) shift++; else break;
-    }
-    const [nq, nr] = offsetToAxial(col, row + shift);
-    newBoard.set(axialKey(nq, nr), cell);
+    newBoard.set(key, cell);
   }
-  return { cleared: fullRows, board: shiftDown ? dropStrandedCells(newBoard) : newBoard };
+  if (!shiftDown) return { cleared: fullRows, board: newBoard };
+  return { cleared: fullRows, board: settleMolecules(splitSeveredGroups(newBoard)) };
 }
 
-// Shifting rows down does not always leave the stack resting on itself.
-// Flat-top gravity has one candidate straight below, so a rigid vertical
-// shift preserves whatever held each cell up. Pointy-top gravity has two --
-// the cell below plus one diagonal neighbour -- and which diagonal it is
-// flips with row parity, so moving a cell an odd number of rows swaps its
-// supports and can leave it holding on to nothing. Those cells stayed locked
-// in mid-air after a line clear.
+// A clear can cut a molecule into parts that no longer touch each other --
+// take a vertical pentacene and remove a row through its middle. Those parts
+// are separate fragments, not one body, so each connected run of cells
+// becomes its own group before anything settles. Without this they would
+// stay rigidly linked across the gap the clear left.
+function splitSeveredGroups(board) {
+  const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+  const byGroup = new Map();
+  for (const [key, cell] of board) {
+    if (!byGroup.has(cell.group)) byGroup.set(cell.group, []);
+    byGroup.get(cell.group).push(key);
+  }
+
+  for (const keys of byGroup.values()) {
+    if (keys.length < 2) continue;
+    const members = new Set(keys);
+    const seen = new Set();
+    let isFirstComponent = true;
+    for (const start of keys) {
+      if (seen.has(start)) continue;
+      const component = [];
+      const stack = [start];
+      seen.add(start);
+      while (stack.length) {
+        const key = stack.pop();
+        component.push(key);
+        const [q, r] = key.split(',').map(Number);
+        for (const [dq, dr] of DIRS) {
+          const next = axialKey(q + dq, r + dr);
+          if (members.has(next) && !seen.has(next)) { seen.add(next); stack.push(next); }
+        }
+      }
+      // The first component keeps the original id; the rest become new ones.
+      if (isFirstComponent) { isFirstComponent = false; continue; }
+      const id = nextMoleculeGroup++;
+      for (const key of component) board.get(key).group = id;
+    }
+  }
+  return board;
+}
+
+// A line clear deletes whatever part of a molecule crossed the cleared row,
+// but the rings that survive are still fused to each other, so they have to
+// move together. Handling cells individually -- shifting each by the number
+// of cleared rows beneath it, or dropping each one that lost its support --
+// pulled fused rings apart, some falling while others were held up by
+// whatever sat below them.
 //
-// This moves *only* the cells the shift stranded: ones where every cell
-// gravity could carry them into is free, which is precisely the test the
-// falling piece itself uses to decide it has landed. A cell resting on a
-// diagonal neighbour keeps its support and does not budge, so the stack is
-// not re-settled and the board does not collapse -- the earlier attempt,
-// which dropped anything with a gap directly beneath it, treated the locked
-// stack as loose grains and compacted the whole board.
+// Each surviving fragment therefore falls as a rigid body, by the same
+// gravity steps a falling piece uses. That choice of rule matters: a piece
+// locks precisely when it cannot fall as a rigid body, so every group on the
+// board is already at rest under it, and only the groups the clear actually
+// disturbed move. The board is not re-settled and does not collapse.
+//
+// Groups are taken lowest-first so one never falls into a space another is
+// about to vacate, and the pass repeats until nothing moves.
 //
 // Only called for the falling mode; placing mode deliberately leaves the
 // rest of the board alone when rows clear.
-function dropStrandedCells(board) {
-  const rowOf = (key) => {
-    const [q, r] = key.split(',').map(Number);
-    return axialToOffset(q, r)[1];
-  };
+function settleMolecules(board) {
+  const lowestRow = (cells) =>
+    Math.max(...cells.map(c => axialToOffset(c.q, c.r)[1]));
+
   let moved = true;
   while (moved) {
     moved = false;
-    // Lowest cells first, so one never falls into a space that the cell
-    // beneath it is about to vacate.
-    const keys = [...board.keys()].sort((a, b) => rowOf(b) - rowOf(a));
-    for (const key of keys) {
-      const cell = board.get(key);
-      if (!cell) continue;
+    const groups = new Map();
+    for (const [key, cell] of board) {
       const [q, r] = key.split(',').map(Number);
-      const steps = fallStepCandidates(q, r).filter(([nq, nr]) => {
-        const [ncol, nrow] = axialToOffset(nq, nr);
-        return isInBounds(ncol, nrow);
-      });
-      if (steps.length === 0) continue;
-      if (!steps.every(([nq, nr]) => !board.has(axialKey(nq, nr)))) continue;
-      const [nq, nr] = steps[0];
-      board.delete(key);
-      board.set(axialKey(nq, nr), cell);
-      moved = true;
+      if (!groups.has(cell.group)) groups.set(cell.group, []);
+      groups.get(cell.group).push({ key, q, r, cell });
+    }
+    const ordered = [...groups.values()].sort((a, b) => lowestRow(b) - lowestRow(a));
+
+    for (const cells of ordered) {
+      const own = new Set(cells.map(c => c.key));
+      // The same candidate steps tryFall uses, as offsets applied to the
+      // whole group rather than to one cell.
+      const anchor = cells[0];
+      const deltas = fallStepCandidates(anchor.q, anchor.r)
+        .map(([nq, nr]) => [nq - anchor.q, nr - anchor.r]);
+
+      for (const [dq, dr] of deltas) {
+        const targets = cells.map(c => [c.q + dq, c.r + dr]);
+        const fits = targets.every(([q, r]) => {
+          const [col, row] = axialToOffset(q, r);
+          if (!isInBounds(col, row)) return false;
+          const key = axialKey(q, r);
+          return !board.has(key) || own.has(key);
+        });
+        if (!fits) continue;
+        for (const c of cells) board.delete(c.key);
+        targets.forEach(([q, r], i) => board.set(axialKey(q, r), cells[i].cell));
+        moved = true;
+        break;
+      }
     }
   }
   return board;
