@@ -289,7 +289,7 @@
   // Left untranslated on purpose: a hashtag only gathers posts together if
   // everyone writes it the same way, so these stay identical in all sixteen
   // languages even though the message around them is translated.
-  const SHARE_HASHTAGS = '#PAHBlockPuzzle #Puzzle';
+  const SHARE_HASHTAGS = '#PAHBlockPuzzle #PAH #Chemistry #Puzzle';
 
   function setupShareButtons() {
     const text = t('share.message').replace('{score}', score)
