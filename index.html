@@ -3,25 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PAH Block Puzzle</title>
+<title>PAH Block Puzzle — Polycyclic Aromatic Block Puzzle</title>
 <meta name="description" content="A block puzzle built from real polycyclic aromatic hydrocarbons. Benzene to coronene on a hex grid, drawn as proper Kekule structures. Two modes, sixteen languages, plays in the browser.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="canonical" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/">
+<link rel="alternate" hreflang="en" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/">
+<link rel="alternate" hreflang="ja" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/ja/">
+<link rel="alternate" hreflang="zh-Hans" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/zh/">
+<link rel="alternate" hreflang="zh-Hant" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/zh-TW/">
+<link rel="alternate" hreflang="ko" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/ko/">
+<link rel="alternate" hreflang="bg" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/bg/">
+<link rel="alternate" hreflang="de" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/de/">
+<link rel="alternate" hreflang="et" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/et/">
+<link rel="alternate" hreflang="el" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/el/">
+<link rel="alternate" hreflang="es" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/es/">
+<link rel="alternate" hreflang="fr" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/fr/">
+<link rel="alternate" hreflang="it" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/it/">
+<link rel="alternate" hreflang="pl" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/pl/">
+<link rel="alternate" hreflang="ru" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/ru/">
+<link rel="alternate" hreflang="uk" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/uk/">
+<link rel="alternate" hreflang="fi" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/fi/">
+<link rel="alternate" hreflang="x-default" href="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/">
 <!-- Absolute URLs: the crawlers that read these do not resolve relative
      ones. og.png is regenerated from og-source.html with headless Chrome:
      chrome --headless=new --screenshot=og.png --window-size=1200,630 og-source.html -->
 <meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
 <meta property="og:site_name" content="PAH Block Puzzle">
-<meta property="og:title" content="PAH Block Puzzle">
-<meta property="og:description" content="A block puzzle built from real polycyclic aromatic hydrocarbons — benzene to coronene, on a hex grid.">
+<meta property="og:title" content="PAH Block Puzzle — Polycyclic Aromatic Block Puzzle">
+<meta property="og:description" content="A block puzzle built from real polycyclic aromatic hydrocarbons. Benzene to coronene on a hex grid, drawn as proper Kekule structures. Two modes, sixteen languages, plays in the browser.">
 <meta property="og:url" content="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/">
 <meta property="og:image" content="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Coronene, pyrene, phenanthrene and benzene drawn as hexagon tiles beside the title PAH Block Puzzle.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="PAH Block Puzzle">
-<meta name="twitter:description" content="A block puzzle built from real polycyclic aromatic hydrocarbons — benzene to coronene, on a hex grid.">
+<meta name="twitter:title" content="PAH Block Puzzle — Polycyclic Aromatic Block Puzzle">
+<meta name="twitter:description" content="A block puzzle built from real polycyclic aromatic hydrocarbons. Benzene to coronene on a hex grid, drawn as proper Kekule structures. Two modes, sixteen languages, plays in the browser.">
 <meta name="twitter:image" content="https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/og.png">
 <!-- Structured data: tells search engines this is a free browser game rather
      than an article, which is what lets it be presented as one in results. -->
@@ -33,16 +51,40 @@
   "alternateName": "Polycyclic Aromatic Block Puzzle",
   "url": "https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/",
   "image": "https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/og.png",
-  "description": "A block puzzle built from real polycyclic aromatic hydrocarbons. Benzene to coronene on a hex grid, drawn as proper Kekule structures, in two modes.",
+  "description": "A block puzzle built from real polycyclic aromatic hydrocarbons. Benzene to coronene on a hex grid, drawn as proper Kekule structures. Two modes, sixteen languages, plays in the browser.",
   "applicationCategory": "GameApplication",
-  "genre": ["Puzzle", "Educational"],
+  "genre": [
+    "Puzzle",
+    "Educational"
+  ],
   "gamePlatform": "Web browser",
   "playMode": "SinglePlayer",
   "operatingSystem": "Any modern web browser",
   "browserRequirements": "Requires JavaScript",
   "isAccessibleForFree": true,
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-  "inLanguage": ["en", "ja", "zh-Hans", "zh-Hant", "ko", "bg", "de", "et", "el", "es", "fr", "it", "pl", "ru", "uk", "fi"],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "inLanguage": [
+    "en",
+    "ja",
+    "zh-Hans",
+    "zh-Hant",
+    "ko",
+    "bg",
+    "de",
+    "et",
+    "el",
+    "es",
+    "fr",
+    "it",
+    "pl",
+    "ru",
+    "uk",
+    "fi"
+  ],
   "about": {
     "@type": "Thing",
     "name": "Polycyclic aromatic hydrocarbon",
@@ -55,7 +97,7 @@
      against a stale cached game.js -- which renders new markup with no
      event listeners bound to it. Bump ASSET_VERSION on every deploy that
      touches style.css or any of the scripts. -->
-<link rel="stylesheet" href="style.css?v=20260918q">
+<link rel="stylesheet" href="style.css?v=20261013a">
 </head>
 <body>
 <div id="app">
@@ -313,10 +355,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=20260918q"></script>
-<script src="hexmath.js?v=20260918q"></script>
-<script src="pieces.js?v=20260918q"></script>
-<script src="board.js?v=20260918q"></script>
-<script src="game.js?v=20260918q"></script>
+<script>window.SITE_ROOT="./";</script>
+<script src="i18n.js?v=20261013a"></script>
+<script src="hexmath.js?v=20261013a"></script>
+<script src="pieces.js?v=20261013a"></script>
+<script src="board.js?v=20261013a"></script>
+<script src="game.js?v=20261013a"></script>
 </body>
 </html>

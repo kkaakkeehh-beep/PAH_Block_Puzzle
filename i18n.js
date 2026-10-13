@@ -750,6 +750,11 @@ let currentLang = "en";
 // the two Chinese translations fits -- zh-Hant, zh-HK and zh-MO are all
 // Traditional despite not being zh-TW.
 function detectDefaultLang() {
+  // A generated per-language page (tools/build_langs.py) declares its own
+  // language, and that has to beat both the stored preference and the browser:
+  // someone landing on /fr/ must see French, or the page contradicts the
+  // canonical and hreflang tags it is serving to search engines.
+  if (window.PAGE_LANG && TRANSLATIONS[window.PAGE_LANG]) return window.PAGE_LANG;
   let stored = null;
   try { stored = localStorage.getItem(LANG_STORAGE_KEY); } catch (e) { /* storage disabled */ }
   if (stored && TRANSLATIONS[stored]) return stored;
@@ -793,6 +798,22 @@ function setLanguage(lang) {
   if (select) select.value = lang;
 }
 
+// Each language has its own URL, so changing the picker navigates instead of
+// swapping the text in place -- otherwise /ja/ could sit there displaying
+// Korean, which is exactly what its canonical and hreflang tags say it is not.
+// Falls back to switching in place when the page was not generated (no
+// SITE_ROOT), so a stand-alone copy of index.html still works.
+function goToLanguage(lang) {
+  if (!TRANSLATIONS[lang]) return;
+  try { localStorage.setItem(LANG_STORAGE_KEY, lang); } catch (e) { /* storage disabled */ }
+  if (!window.SITE_ROOT) { setLanguage(lang); return; }
+  // Clean directory URLs over http; over file:// a bare directory shows a
+  // listing instead of the page, so there the filename is spelled out.
+  const dir = lang === "en" ? "" : lang + "/";
+  const file = location.protocol === "file:" ? "index.html" : "";
+  location.href = window.SITE_ROOT + dir + file;
+}
+
 function initI18n() {
   currentLang = detectDefaultLang();
   const container = document.getElementById("lang-selector");
@@ -805,7 +826,7 @@ function initI18n() {
     select.appendChild(option);
   });
   select.value = currentLang;
-  select.addEventListener("change", () => setLanguage(select.value));
+  select.addEventListener("change", () => goToLanguage(select.value));
   container.appendChild(select);
   applyTranslations();
 }
