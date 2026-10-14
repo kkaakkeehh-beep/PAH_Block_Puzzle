@@ -43,22 +43,39 @@ OG_LOCALE = {
 }
 
 
+# Search-facing text, separate from the UI on purpose.
+#
+# The subtitle in i18n.js is written for a chemist reading the page --
+# "Polycyclic Aromatic Block Puzzle" -- and almost nobody types that into a
+# search box. These say the same thing in the words people actually search
+# with (chemistry, puzzle, game, free), without touching what the page shows.
+TITLE_OVERRIDES = {
+    "en": "PAH Block Puzzle — chemistry puzzle game with real molecules",
+    # 「分子で遊ぶ無料の化学パズルゲーム」
+    "ja": ("PAH Block Puzzle — 分子で遊ぶ無料"
+           "の化学パズルゲーム"),
+}
+
 # Hand-written descriptions win over the composed one. Only for languages
 # where the text has actually been reviewed -- inventing marketing copy in
 # fourteen languages nobody here reads would be worse than reusing the UI
 # strings, which at least are translations someone checked.
 DESCRIPTION_OVERRIDES = {
-    "en": ("A block puzzle built from real polycyclic aromatic hydrocarbons. "
-           "Benzene to coronene on a hex grid, drawn as proper Kekule "
-           "structures. Two modes, sixteen languages, plays in the browser."),
-    "ja": ("実在の多環芳香族炭化水"
-           "素でできたブロックパズ"
-           "ル。ベンゼンからコロネ"
-           "ンまでを、六角格子の上"
-           "に本物のケクレ構造で描"
-           "きます。2つのモード、16"
-           "言語、ブラウザですぐ遊"
-           "べます。"),
+    "en": ("A free chemistry puzzle game in your browser. Real polycyclic "
+           "aromatic hydrocarbons — benzene to coronene — drop onto a "
+           "hex grid, every molecule drawn as a proper Kekulé structure. "
+           "Two modes, sixteen languages, no sign-up."),
+    # 「ブラウザで遊べる無料の化学パズルゲーム。ベンゼンからコロネンまで、
+    #   実在の多環芳香族炭化水素が落ちてきます。分子はすべて本物のケクレ
+    #   構造で描画。2モード・16言語、登録不要。」
+    "ja": ("ブラウザで遊べる無料の"
+           "化学パズルゲーム。ベン"
+           "ゼンからコロネンまで、"
+           "実在の多環芳香族炭化水"
+           "素が落ちてきます。分子"
+           "はすべて本物のケクレ構"
+           "造で描画。2モード・16言"
+           "語、登録不要。"),
 }
 
 
@@ -138,6 +155,8 @@ def tr(trans, lang, key):
 
 
 def page_title(trans, lang):
+    if lang in TITLE_OVERRIDES:
+        return TITLE_OVERRIDES[lang]
     return "PAH Block Puzzle — " + tr(trans, lang, "subtitle")
 
 
