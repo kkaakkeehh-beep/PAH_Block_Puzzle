@@ -4,6 +4,7 @@
 六角格子の上に、正しいKekulé構造で描いています。
 
 **[▶ ブラウザで遊ぶ](https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/)** ·
+[itch.io でも公開中](https://takato-yoda.itch.io/pah-block-puzzle) ·
 [English README](README.md)
 
 <p align="center">

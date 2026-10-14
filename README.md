@@ -4,6 +4,7 @@ A block puzzle built from real polycyclic aromatic hydrocarbons. Benzene to
 coronene, on a hex grid, drawn as proper Kekulé structures.
 
 **[▶ Play in your browser](https://kkaakkeehh-beep.github.io/PAH_Block_Puzzle/)** ·
+[Also on itch.io](https://takato-yoda.itch.io/pah-block-puzzle) ·
 [日本語 README](README.ja.md)
 
 <p align="center">
