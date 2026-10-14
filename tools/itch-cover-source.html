@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!-- Source for the 630x500 cover image itch.io puts on its browse grids.
+     Not shipped as a page: rendered once by headless Chrome and uploaded.
+     Kept in the repo so the cover can be regenerated from the same Kekule
+     code the game itself draws with, exactly like og-source.html.
+
+     chrome --headless=new --disable-gpu --hide-scrollbars \
+       --screenshot=itch-cover.png --window-size=630,500 \
+       tools/itch-cover-source.html
+
+     630x500 is itch's required cover ratio, and it is shown as small as
+     315x250 on a browse grid -- so this is deliberately four molecules and a
+     title, not a busy scene. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<style>
+  html, body { margin: 0; padding: 0; background: #f4f1e8; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="cover" width="630" height="500"></canvas>
+<script src="../hexmath.js"></script>
+<script src="../pieces.js"></script>
+<script src="../board.js"></script>
+<script>
+  setOrientation('flat');
+  const W = 630, H = 500;
+  const g = document.getElementById('cover').getContext('2d');
+
+  const grad = g.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#f8f5ee');
+  grad.addColorStop(1, '#e3dccb');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, W, H);
+
+  // The same faint lattice the promo frames use, so the cover sits in the
+  // same family as everything else that represents the game.
+  g.save();
+  g.globalAlpha = 0.05;
+  g.strokeStyle = '#2a6f77';
+  g.lineWidth = 1.5;
+  for (let q = -2; q < 12; q++) {
+    for (let r = -6; r < 12; r++) {
+      const [x, y] = axialToPixel(q, r, 38);
+      const cx = x + 10, cy = y + 30;
+      if (cx < -50 || cx > W + 50 || cy < -50 || cy > H + 50) continue;
+      g.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const [px, py] = hexCorner(cx, cy, 38, i);
+        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+      }
+      g.closePath();
+      g.stroke();
+    }
+  }
+  g.restore();
+
+  function molecule(name, cx, cy, size) {
+    const shape = PAH_SHAPES.find(s => s.name === name);
+    const pts = shape.offsets.map(([q, r]) => axialToPixel(q, r, size));
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const ox = cx - (Math.min(...xs) + Math.max(...xs)) / 2;
+    const oy = cy - (Math.min(...ys) + Math.max(...ys)) / 2;
+    const bonds = kekuleBondsForCells(shape.offsets);
+    pts.forEach(([x, y], i) => {
+      g.save();
+      g.shadowColor = 'rgba(30,35,45,0.18)';
+      g.shadowBlur = 10;
+      g.shadowOffsetY = 4;
+      drawHex(g, x + ox, y + oy, size * 0.94, shape.color, '#1d2126', 2.5);
+      g.restore();
+      drawDoubleBonds(g, x + ox, y + oy, size * 0.94, bonds[i], 'rgba(255,255,255,0.85)', 2.6);
+    });
+  }
+
+  molecule('Coronene', 315, 160, 50);
+  molecule('Pyrene', 92, 108, 27);
+  molecule('Anthracene', 533, 96, 25);
+  molecule('Benzene', 74, 282, 25);
+  molecule('Naphthalene', 551, 272, 25);
+
+  g.textAlign = 'center';
+  g.fillStyle = '#22262b';
+  g.font = '700 62px "Segoe UI", system-ui, sans-serif';
+  g.fillText('PAH Block Puzzle', W / 2, 400);
+  g.fillStyle = '#2a6f77';
+  g.font = '500 25px "Segoe UI", system-ui, sans-serif';
+  g.fillText('a chemistry puzzle on a hex grid', W / 2, 440);
+</script>
+</body>
+</html>
