@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PAH Block Puzzle - promo recorder</title>
+<style>
+  html, body { margin: 0; background: #202428; overflow: hidden;
+               font-family: "Segoe UI", "Yu Gothic UI", Meiryo, system-ui, sans-serif; }
+  #stage  { position: absolute; left: 0; top: 0; width: 1000px; height: 1160px; border: 0; z-index: 0; }
+  #promo  { position: absolute; left: 8px; top: 8px; z-index: 5;
+            background: #000; box-shadow: 0 8px 30px rgba(0,0,0,0.6); }
+  #status { position: absolute; left: 8px; bottom: 8px; width: 820px; color: #7fd1a1; z-index: 5;
+            font: 13px/1.5 Consolas, monospace; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<canvas id="promo"></canvas>
+<pre id="status">booting</pre>
+<script>
+(function () {
+  'use strict';
+
+  var params = new URLSearchParams(location.search);
+  var VERTICAL = params.get('format') !== 'wide';
+  var W = VERTICAL ? 1080 : 1280, H = VERTICAL ? 1920 : 720;
+  var MODE = params.get('mode') === 'place' ? 'place' : 'fall';
+  var PLACING = MODE === 'place';
+  var ENDCARD = params.get('endcard') === 'search' ? 'search' : 'card';
+  var COLS = 7, ROWS = PLACING ? 9 : 14;
+  // Reels and Shorts are delivered at 30fps and the file has to be small
+  // enough to reach a phone, so the vertical cut captures every other frame.
+  var FRAME_SKIP = VERTICAL ? 2 : 1;
+  var BITRATE = Number(params.get('br') || (VERTICAL ? 3500000 : 6000000));
+  var LANG = params.get('lang') || 'en';
+  var TAKE = params.get('take') || '';
+  var SUFFIX = TAKE ? '-' + TAKE : '';
+  var SEED_BEST = params.get('best') === null ? 8640 : Number(params.get('best'));
+
+  var T_TITLE_HOLD = 1900, T_TITLE_END = 2500;
+  var T_OUTRO_IN = Number(params.get('play') || 23000);
+  var OUTRO_MS = ENDCARD === 'search' ? 5500 : 3200;
+  var T_OUTRO_END = T_OUTRO_IN + OUTRO_MS;
+
+  var promo = document.getElementById('promo');
+  promo.width = W;
+  promo.height = H;
+  promo.style.width = (VERTICAL ? 250 : 760) + 'px';
+  promo.style.height = (VERTICAL ? 444 : 428) + 'px';
+  var g = promo.getContext('2d');
+  var statusEl = document.getElementById('status');
+  var logLines = [];
+
+  function log(s) {
+    logLines.unshift(s);
+    statusEl.textContent = logLines.slice(0, 12).join('\n');
+    try { fetch('/log', { method: 'POST', body: s }); } catch (e) {}
+  }
+  function post(path, body) {
+    return fetch(path, { method: 'POST', body: body })
+      .catch(function (e) { log('post failed ' + e); });
+  }
+
+  // ---------------------------------------------------------------- palette
+  var BG0 = '#f8f5ee', BG1 = '#e6e0d1';
+  var INK = '#22262b', INK_SOFT = '#5d6570', ACCENT = '#2a6f77';
+  var FONT = '"Segoe UI", "Yu Gothic UI", Meiryo, system-ui, sans-serif';
+  var SITE = 'kkaakkeehh-beep.github.io/PAH_Block_Puzzle';
+
+  var STRINGS = {
+    en: {
+      tagline: 'Polycyclic aromatic hydrocarbons, hex by hex',
+      score: 'SCORE', level: 'LEVEL', lines: 'LINES',
+      falling: 'NOW FALLING', next: 'NEXT', molecules: 'MOLECULES', tray: 'TRAY',
+      cleared1: 'ROW CLEARED', clearedN: '{n} ROWS CLEARED',
+      heroSub: 'Benzene to coronene, drawn as real Kekulé structures',
+      heroSub2: 'a block puzzle on a hex grid',
+      heroSubPlace: 'Fit real fused-ring molecules onto a hex board',
+      heroSub2Place: 'no timer, no gravity — just the fit',
+      outro: '2 modes  ·  16 languages  ·  free in your browser',
+      searchPrompt: 'Search for it',
+      searchButton: 'Search',
+      resultTitle: 'PAH Block Puzzle — chemistry puzzle game with real molecules',
+      resultSnippet: 'A free chemistry puzzle game in your browser. Real polycyclic '
+        + 'aromatic hydrocarbons — benzene to coronene — drop onto a hex grid, '
+        + 'every molecule drawn as a proper Kekulé structure.'
+    },
+    ja: {
+      tagline: '多環芳香族炭化水素を、六角形で積む',
+      score: 'スコア', level: 'レベル', lines: 'ライン',
+      falling: '落下中', next: 'つぎ',
+      molecules: '分子', tray: 'トレイ',
+      cleared1: '1列消去', clearedN: '{n}列消去',
+      heroSub: 'ベンゼンからコロネンまで、本物のケクレ構造で',
+      heroSub2: '六角格子のブロックパズル',
+      heroSubPlace: '実在の縮環分子を、六角形の盤面に敷きつめる',
+      heroSub2Place: '時間制限なし、落下なし。ぴったり嵌める快感',
+      outro: '2モード ・ 16言語 ・ ブラウザで無料',
+      searchPrompt: '検索してみてください',
+      searchButton: '検索',
+      resultTitle: 'PAH Block Puzzle — 分子で遊ぶ無料の化学パズルゲーム',
+      resultSnippet: 'ブラウザで遊べる無料の化学パズル'
+        + 'ゲーム。ベンゼンからコロネンまで、'
+        + '実在の多環芳香族炭化水素が落ちてきます。'
+        + '分子はすべて本物のケクレ構造で描画。'
+    }
+  };
+  var S = STRINGS[LANG] || STRINGS.en;
+  var SEARCH_QUERY = 'PAH Block Puzzle';
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // Formulas get their counts as real subscripts: the audience is chemists.
+  function drawFormula(ctx, text, x, y, size) {
+    var i = 0;
+    ctx.save();
+    while (i < text.length) {
+      var ch = text.charAt(i);
+      if (ch >= '0' && ch <= '9') {
+        var j = i;
+        while (j < text.length && text.charAt(j) >= '0' && text.charAt(j) <= '9') j++;
+        ctx.font = '400 ' + Math.round(size * 0.72) + 'px ' + FONT;
+        ctx.fillText(text.slice(i, j), x, y + size * 0.17);
+        x += ctx.measureText(text.slice(i, j)).width;
+        i = j;
+      } else {
+        ctx.font = '400 ' + size + 'px ' + FONT;
+        ctx.fillText(ch, x, y);
+        x += ctx.measureText(ch).width;
+        i++;
+      }
+    }
+    ctx.restore();
+  }
+
+  function formulaWidth(ctx, text, size) {
+    var i = 0, total = 0;
+    ctx.save();
+    while (i < text.length) {
+      var ch = text.charAt(i);
+      if (ch >= '0' && ch <= '9') {
+        var j = i;
+        while (j < text.length && text.charAt(j) >= '0' && text.charAt(j) <= '9') j++;
+        ctx.font = '400 ' + Math.round(size * 0.72) + 'px ' + FONT;
+        total += ctx.measureText(text.slice(i, j)).width;
+        i = j;
+      } else {
+        ctx.font = '400 ' + size + 'px ' + FONT;
+        total += ctx.measureText(ch).width;
+        i++;
+      }
+    }
+    ctx.restore();
+    return total;
+  }
+
+  // Breaks at spaces when the text has them and between characters when it
+  // does not, which is what Japanese needs.
+  function wrapLines(ctx, text, maxWidth, maxLines) {
+    var lines = [], line = '';
+    for (var i = 0; i < text.length && lines.length < maxLines; i++) {
+      var test = line + text.charAt(i);
+      if (line && ctx.measureText(test).width > maxWidth) {
+        var sp = line.lastIndexOf(' ');
+        if (sp > line.length * 0.5) {
+          lines.push(line.slice(0, sp));
+          line = line.slice(sp + 1) + text.charAt(i);
+        } else {
+          lines.push(line);
+          line = text.charAt(i);
+        }
+      } else {
+        line = test;
+      }
+    }
+    if (lines.length < maxLines && line) lines.push(line);
+    return lines;
+  }
+
+  function ease(t) { return t < 0 ? 0 : t > 1 ? 1 : 1 - Math.pow(1 - t, 3); }
+  function phase(t, a, b) { return ease((t - a) / (b - a)); }
+
+  // ------------------------------------------------------------ game handle
+  var iframe, w, P, boardCanvas;
+
+  function boot() {
+    try {
+      localStorage.setItem('pahBlockPuzzleLang', LANG);
+      if (SEED_BEST > 0) {
+        localStorage.setItem('pahBlockPuzzleHighScore_fall', String(SEED_BEST));
+      }
+    } catch (e) {}
+    iframe = document.createElement('iframe');
+    iframe.id = 'stage';
+    iframe.src = 'index.html';
+    iframe.onload = function () { setTimeout(afterLoad, 400); };
+    document.body.appendChild(iframe);
+  }
+
+  function afterLoad() {
+    w = iframe.contentWindow;
+    P = w.__promo;
+    if (!P) { log('ERROR: __promo missing - re-run stage.ps1'); return; }
+    boardCanvas = w.document.getElementById('board-canvas');
+    var d = w.document;
+    if (PLACING) {
+      // Placing skips the orientation screen: its click-to-place maths only
+      // works flat-top, so it goes straight to the difficulty cards.
+      d.getElementById('home-place-btn').click();
+    } else {
+      d.getElementById('home-fall-btn').click();
+      var o = d.querySelector('[data-orientation="flat"]');
+      if (o) o.click();
+    }
+    var diff = d.querySelector('[data-difficulty="normal"]');
+    if (diff) diff.click();
+    log('started, mode=' + P.state().mode + ' endcard=' + ENDCARD);
+    warmup();
+  }
+
+  function key(k) {
+    w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  }
+  function cells(shape, ri, q, r) {
+    return shape.rotationStates[ri].map(function (o) { return [q + o[0], r + o[1]]; });
+  }
+  function gridOf(map) {
+    var grid = [], r, c;
+    for (r = 0; r < ROWS; r++) {
+      grid.push([]);
+      for (c = 0; c < COLS; c++) grid[r].push(0);
+    }
+    map.forEach(function (v, k) {
+      var p = k.split(',');
+      var off = w.axialToOffset(Number(p[0]), Number(p[1]));
+      if (off[1] >= 0 && off[1] < ROWS && off[0] >= 0 && off[0] < COLS) grid[off[1]][off[0]] = 1;
+    });
+    return grid;
+  }
+
+  // Where this rotation ends up dropped down a column, using the game's own
+  // fall rule rather than a reimplementation of it.
+  function landingCells(map, shape, ri, col) {
+    var start = null, i;
+    for (var row = 0; row <= 5 && !start; row++) {
+      var a = w.offsetToAxial(col, row);
+      if (w.canPlaceCells(map, cells(shape, ri, a[0], a[1]))) start = a;
+    }
+    if (!start) return null;
+    var q = start[0], r = start[1];
+    for (;;) {
+      var moved = false, cand = w.fallStepCandidates(q, r);
+      for (i = 0; i < cand.length; i++) {
+        if (w.canPlaceCells(map, cells(shape, ri, cand[i][0], cand[i][1]))) {
+          q = cand[i][0]; r = cand[i][1]; moved = true; break;
+        }
+      }
+      if (!moved) break;
+    }
+    return cells(shape, ri, q, r);
+  }
+
+  var simGroup = -1;
+
+  function applyPlacement(map, placed) {
+    var next = new Map(map), grp = simGroup--;
+    placed.forEach(function (cc) {
+      next.set(cc[0] + ',' + cc[1], { color: '#000000', bonds: [], group: grp });
+    });
+    var grid = gridOf(next), lines = 0, r, c;
+    for (r = 0; r < ROWS; r++) {
+      var full = true;
+      for (c = 0; c < COLS; c++) if (!grid[r][c]) { full = false; break; }
+      if (full) lines++;
+    }
+    if (lines > 0) {
+      // Placing clears rows without settling anything downwards, which is what
+      // the game does: clearFullRows takes shiftDown = mode === 'fall'.
+      var res = w.clearFullRows(next, !PLACING);
+      next = res.board;
+      grid = gridOf(next);
+    }
+    return { map: next, grid: grid, lines: lines };
+  }
+
+  // ------------------------------------------------------------ falling bot
+  // Dellacherie's feature set, which is the difference between a bot that
+  // tops out inside a 26-second clip and one that does not.
+  function features(grid) {
+    var holes = 0, rowT = 0, colT = 0, wells = 0, maxH = 0, above = 0;
+    var heights = [], r, c;
+    for (c = 0; c < COLS; c++) {
+      var h = 0, seen = false;
+      for (r = 0; r < ROWS; r++) {
+        if (grid[r][c]) {
+          if (!seen) { seen = true; h = ROWS - r; }
+          if (r < 3) above++;
+        } else if (seen) holes++;
+      }
+      heights.push(h);
+      if (h > maxH) maxH = h;
+    }
+    for (r = 0; r < ROWS; r++) {
+      var prev = 1;
+      for (c = 0; c < COLS; c++) {
+        var cur = grid[r][c] ? 1 : 0;
+        if (cur !== prev) rowT++;
+        prev = cur;
+      }
+      if (prev !== 1) rowT++;
+    }
+    for (c = 0; c < COLS; c++) {
+      var prevC = 0;
+      for (r = 0; r < ROWS; r++) {
+        var curC = grid[r][c] ? 1 : 0;
+        if (curC !== prevC) colT++;
+        prevC = curC;
+      }
+      if (prevC !== 1) colT++;
+    }
+    for (c = 0; c < COLS; c++) {
+      var left = c === 0 ? ROWS : heights[c - 1];
+      var right = c === COLS - 1 ? ROWS : heights[c + 1];
+      var d = Math.min(left, right) - heights[c];
+      if (d > 0) wells += d * (d + 1) / 2;
+    }
+    return { holes: holes, rowT: rowT, colT: colT, wells: wells, maxH: maxH, above: above };
+  }
+
+  function positionScore(grid, lines, placed) {
+    var f = features(grid);
+    var rows = placed.map(function (cc) { return w.axialToOffset(cc[0], cc[1])[1]; });
+    var landingHeight = ROWS - (Math.min.apply(null, rows) + Math.max.apply(null, rows)) / 2;
+    var s = -4.5 * landingHeight + 6.8 * lines
+          - 3.22 * f.rowT - 9.35 * f.colT - 7.9 * f.holes - 3.38 * f.wells;
+    // A settled cell above the deadline ends the round outright, which in a
+    // promo means the score visibly resetting to zero.
+    s -= f.above * 600;
+    // Height 12 already means a cell on the deadline row, so the squeeze
+    // starts well before: a coronene needs three clear rows to land in.
+    if (f.maxH > 7) s -= (f.maxH - 7) * 150;
+    return s;
+  }
+
+  function firstPlyCandidates(map, shape) {
+    var out = [];
+    for (var ri = 0; ri < shape.rotationStates.length; ri++) {
+      for (var col = 0; col < COLS; col++) {
+        var placed = landingCells(map, shape, ri, col);
+        if (!placed) continue;
+        var ap = applyPlacement(map, placed);
+        out.push({ ri: ri, col: col, map: ap.map,
+                   score: positionScore(ap.grid, ap.lines, placed) });
+      }
+    }
+    return out;
+  }
+
+  function planBest() {
+    var cur = P.current;
+    if (!cur) return null;
+    var cands = firstPlyCandidates(P.board, cur.shape);
+    if (!cands.length) return null;
+    cands.sort(function (a, b) { return b.score - a.score; });
+    var look = P.nextQueue && P.nextQueue[0] ? P.nextQueue[0].shape : null;
+    if (!look) return { ri: cands[0].ri, col: cands[0].col };
+    var best = null;
+    for (var i = 0; i < Math.min(6, cands.length); i++) {
+      var follow = firstPlyCandidates(cands[i].map, look);
+      var bestFollow = follow.length ? -1e9 : -5000;
+      for (var j = 0; j < follow.length; j++) {
+        if (follow[j].score > bestFollow) bestFollow = follow[j].score;
+      }
+      var total = cands[i].score + 0.7 * bestFollow;
+      if (!best || total > best.total) best = { total: total, ri: cands[i].ri, col: cands[i].col };
+    }
+    return best;
+  }
+
+  // Columns the piece can still slide into from where it is. A plan made at
+  // spawn assumes a clear path, and once the stack is tall that breaks.
+  function reachableCols(shape, ri, q, r) {
+    var out = [w.axialToOffset(q, r)[0]], step, trial;
+    for (step = -1; step <= 1; step += 2) {
+      trial = q;
+      for (var n = 0; n < COLS; n++) {
+        trial += step;
+        if (!w.canPlaceCells(P.board, cells(shape, ri, trial, r))) break;
+        out.push(w.axialToOffset(trial, r)[0]);
+      }
+    }
+    return out;
+  }
+
+  // Best landing among the columns still reachable, in the rotation the piece
+  // is already in. Without this the bot slams blocked pieces down wherever
+  // they happen to be, which was a quarter of them.
+  function replanFromHere() {
+    var cur = P.current;
+    if (!cur) return null;
+    var ri = cur.rotationIndex, best = null;
+    var options = reachableCols(cur.shape, ri, cur.anchorQ, cur.anchorR);
+    for (var i = 0; i < options.length; i++) {
+      var placed = landingCells(P.board, cur.shape, ri, options[i]);
+      if (!placed) continue;
+      var ap = applyPlacement(P.board, placed);
+      var sc = positionScore(ap.grid, ap.lines, placed);
+      if (!best || sc > best.score) best = { score: sc, ri: ri, col: options[i] };
+    }
+    return best;
+  }
+
+  var plan = null, planId = -1, stuck = 0, settleWait = 0;
+  var gameOvers = 0, hardDrops = 0, stuckDrops = 0, placeCount = 0;
+
+  function botStep() {
+    var st = P.state();
+    if (st.gameOver) { restart(st); return; }
+    if (!st.running || st.paused || st.mode !== 'fall' || st.flashTimer > 0) return;
+    var cur = P.current;
+    if (!cur) return;
+    var id = w.__promoPieceId;
+    if (id !== planId) {
+      plan = planBest();
+      planId = id;
+      stuck = 0;
+      settleWait = 0;
+      if (!plan) { key(' '); return; }
+    }
+    if (!plan) return;
+
+    if (cur.rotationIndex !== plan.ri) {
+      var before = cur.rotationIndex;
+      key('ArrowUp');
+      if (P.current && P.current.rotationIndex === before) {
+        stuck++;
+        if (stuck > 3) { plan = replanFromHere(); stuck = 0; if (!plan) { stuckDrops++; key(' '); } }
+      } else stuck = 0;
+      return;
+    }
+    var col = w.axialToOffset(cur.anchorQ, cur.anchorR)[0];
+    if (col !== plan.col) {
+      key(col < plan.col ? 'ArrowRight' : 'ArrowLeft');
+      var after = w.axialToOffset(P.current.anchorQ, P.current.anchorR)[0];
+      if (after === col) {
+        stuck++;
+        if (stuck > 3) { plan = replanFromHere(); stuck = 0; if (!plan) { stuckDrops++; key(' '); } }
+      } else stuck = 0;
+      return;
+    }
+    // Aligned: pause a beat so the placement reads, then slam it home.
+    settleWait++;
+    if (settleWait >= 2) { hardDrops++; key(' '); }
+  }
+
+  function restart(st) {
+    var btn = w.document.getElementById('restart-btn');
+    if (btn) btn.click();
+    plan = null; planId = -1; placePlan = null;
+    gameOvers++;
+    log('game over #' + gameOvers + ' at score ' + st.score);
+  }
+
+  // ------------------------------------------------------------ placing bot
+  // Nothing falls here: a tray of three has to be fitted onto a 7x9 board and
+  // the round ends the moment no tray piece fits anywhere. So the danger is
+  // not height, it is fragmenting the free space into unusable pockets.
+  var HEX_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, 1]];
+
+  function emptyRegions(map) {
+    var grid = gridOf(map), seen = {}, sizes = [], r, c;
+    for (r = 0; r < ROWS; r++) {
+      for (c = 0; c < COLS; c++) {
+        if (grid[r][c] || seen[c + ',' + r]) continue;
+        var stack = [[c, r]], size = 0;
+        seen[c + ',' + r] = 1;
+        while (stack.length) {
+          var cell = stack.pop();
+          size++;
+          var ax = w.offsetToAxial(cell[0], cell[1]);
+          for (var d = 0; d < HEX_DIRS.length; d++) {
+            var off = w.axialToOffset(ax[0] + HEX_DIRS[d][0], ax[1] + HEX_DIRS[d][1]);
+            if (off[0] < 0 || off[0] >= COLS || off[1] < 0 || off[1] >= ROWS) continue;
+            var k = off[0] + ',' + off[1];
+            if (seen[k] || grid[off[1]][off[0]]) continue;
+            seen[k] = 1;
+            stack.push(off);
+          }
+        }
+        sizes.push(size);
+      }
+    }
+    return sizes;
+  }
+
+  function fitsAnywhere(map, shape) {
+    for (var ri = 0; ri < shape.rotationStates.length; ri++) {
+      for (var col = 0; col < COLS; col++) {
+        for (var row = 0; row < ROWS; row++) {
+          var a = w.offsetToAxial(col, row);
+          if (w.canPlaceCells(map, cells(shape, ri, a[0], a[1]))) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // How much of the new molecule's edge is shared with something already
+  // there, or with a wall. Hugging what is on the board keeps the free space
+  // in one piece, and it looks deliberate, which matters in a clip.
+  function contactCount(before, placed) {
+    var own = {}, i, d, n = 0;
+    for (i = 0; i < placed.length; i++) own[placed[i][0] + ',' + placed[i][1]] = 1;
+    for (i = 0; i < placed.length; i++) {
+      for (d = 0; d < HEX_DIRS.length; d++) {
+        var nq = placed[i][0] + HEX_DIRS[d][0], nr = placed[i][1] + HEX_DIRS[d][1];
+        if (own[nq + ',' + nr]) continue;
+        var off = w.axialToOffset(nq, nr);
+        if (off[0] < 0 || off[0] >= COLS || off[1] < 0 || off[1] >= ROWS) n++;
+        else if (before.has(nq + ',' + nr)) n++;
+      }
+    }
+    return n;
+  }
+
+  function placeScore(map, lines, contacts) {
+    var regions = emptyRegions(map), singles = 0, biggest = 0, i;
+    for (i = 0; i < regions.length; i++) {
+      if (regions[i] <= 2) singles += regions[i];
+      if (regions[i] > biggest) biggest = regions[i];
+    }
+    var grid = gridOf(map), concentration = 0, r, c;
+    for (r = 0; r < ROWS; r++) {
+      var filled = 0;
+      for (c = 0; c < COLS; c++) if (grid[r][c]) filled++;
+      concentration += filled * filled;
+    }
+    return lines * 260 + contacts * 15 + concentration * 2.5
+         + biggest * 2 - singles * 24 - regions.length * 10;
+  }
+
+  function planPlacement() {
+    var tray = P.tray || [], cands = [], slot, ri, col, row, i;
+    for (slot = 0; slot < tray.length; slot++) {
+      if (!tray[slot]) continue;
+      var shape = tray[slot].shape;
+      for (ri = 0; ri < shape.rotationStates.length; ri++) {
+        for (col = 0; col < COLS; col++) {
+          for (row = 0; row < ROWS; row++) {
+            var a = w.offsetToAxial(col, row);
+            var placed = cells(shape, ri, a[0], a[1]);
+            if (!w.canPlaceCells(P.board, placed)) continue;
+            var ap = applyPlacement(P.board, placed);
+            cands.push({ slot: slot, ri: ri, col: col, row: row, map: ap.map,
+                         score: placeScore(ap.map, ap.lines, contactCount(P.board, placed)) });
+          }
+        }
+      }
+    }
+    if (!cands.length) return null;
+    cands.sort(function (a, b) { return b.score - a.score; });
+    // Only the shortlist pays for the "can the rest of the tray still go
+    // somewhere" check, which is what actually prevents an early finish.
+    for (i = 0; i < Math.min(10, cands.length); i++) {
+      var ok = true;
+      for (var s = 0; s < tray.length; s++) {
+        if (s === cands[i].slot || !tray[s]) continue;
+        if (!fitsAnywhere(cands[i].map, tray[s].shape)) { ok = false; break; }
+      }
+      if (ok) return cands[i];
+    }
+    return cands[0];
+  }
+
+  var placePlan = null;
+
+  function placeStep() {
+    var st = P.state();
+    if (st.gameOver) { restart(st); return; }
+    if (!st.running || st.mode !== 'place' || st.flashTimer > 0) return;
+    var tray = P.tray || [];
+    if (placePlan && !tray[placePlan.slot]) placePlan = null;
+    if (!placePlan) {
+      placePlan = planPlacement();
+      if (!placePlan) return;
+    }
+    if (P.selectedSlot !== placePlan.slot) { key(String(placePlan.slot + 1)); return; }
+    if (tray[placePlan.slot].rotationIndex !== placePlan.ri) { key('r'); return; }
+    var hover = P.hoverAxial;
+    if (!hover) { key('ArrowRight'); return; }
+    var here = w.axialToOffset(hover[0], hover[1]);
+    // One cell per tick, so the ghost preview is visibly walked to where the
+    // molecule is going rather than teleporting there.
+    if (here[0] !== placePlan.col) { key(here[0] < placePlan.col ? 'ArrowRight' : 'ArrowLeft'); return; }
+    if (here[1] !== placePlan.row) { key(here[1] < placePlan.row ? 'ArrowDown' : 'ArrowUp'); return; }
+    key('Enter');
+    placeCount++;
+    placePlan = null;
+  }
+
+  // Distinct molecules seen so far, for the card corners: at the moment the
+  // title card is drawn there may only be one or two on hand.
+  var seenShapes = [], seenNames = {};
+
+  function noteShapes() {
+    var pool = [], i;
+    if (P.current) pool.push(P.current.shape);
+    var q = P.nextQueue || [];
+    for (i = 0; i < q.length; i++) if (q[i]) pool.push(q[i].shape);
+    var tray = P.tray || [];
+    for (i = 0; i < tray.length; i++) if (tray[i]) pool.push(tray[i].shape);
+    for (i = 0; i < pool.length; i++) {
+      if (seenNames[pool[i].name]) continue;
+      seenNames[pool[i].name] = 1;
+      seenShapes.push(pool[i]);
+    }
+  }
+
+  function botTick() {
+    noteShapes();
+    if (PLACING) placeStep(); else botStep();
+  }
+
+  // --------------------------------------------------------------- drawing
+  function drawMolecule(ctx, shape, size, cx, cy, alpha) {
+    var pts = shape.rotationStates[0].map(function (o) { return w.axialToPixel(o[0], o[1], size); });
+    var xs = pts.map(function (p) { return p[0]; });
+    var ys = pts.map(function (p) { return p[1]; });
+    var ox = cx - (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2;
+    var oy = cy - (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+    var bonds = w.kekuleBondsForPiece(shape, 0);
+    ctx.save();
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
+    pts.forEach(function (p, i) {
+      w.drawHex(ctx, p[0] + ox, p[1] + oy, size * 0.93, shape.color, '#1d2126', 2);
+      w.drawDoubleBonds(ctx, p[0] + ox, p[1] + oy, size * 0.93, bonds[i], 'rgba(255,255,255,0.85)', 2.2);
+    });
+    ctx.restore();
+  }
+
+  // Pentacene is five rings wide where benzene is one, so decorations are
+  // trimmed to a box instead of being fixed per position.
+  function drawMoleculeFit(shape, cx, cy, maxW, maxH, baseSize, alpha) {
+    var pts = shape.rotationStates[0].map(function (o) { return w.axialToPixel(o[0], o[1], baseSize); });
+    var xs = pts.map(function (p) { return p[0]; });
+    var ys = pts.map(function (p) { return p[1]; });
+    var wide = Math.max.apply(null, xs) - Math.min.apply(null, xs) + baseSize * 2;
+    var tall = Math.max.apply(null, ys) - Math.min.apply(null, ys) + baseSize * 2;
+    var scale = Math.min(1, maxW / wide, maxH / tall);
+    drawMolecule(g, shape, baseSize * scale, cx, cy, alpha === undefined ? 0.9 : alpha);
+  }
+
+  // The gradient and lattice never change, and restroking a thousand hexagons
+  // every frame on a 1080x1920 canvas starved the bot's input timer.
+  var backdrop = null;
+
+  function buildBackdrop() {
+    backdrop = document.createElement('canvas');
+    backdrop.width = W;
+    backdrop.height = H;
+    var b = backdrop.getContext('2d');
+    var grad = b.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, BG0);
+    grad.addColorStop(1, BG1);
+    b.fillStyle = grad;
+    b.fillRect(0, 0, W, H);
+    b.globalAlpha = 0.045;
+    b.strokeStyle = ACCENT;
+    b.lineWidth = 1.5;
+    var s = 44;
+    for (var q = -4; q < 22; q++) {
+      for (var r = -14; r < 32; r++) {
+        var p = w.axialToPixel(q, r, s);
+        var cx = p[0] + 20, cy = p[1] + 40;
+        if (cx < -60 || cx > W + 60 || cy < -60 || cy > H + 60) continue;
+        b.beginPath();
+        for (var i = 0; i < 6; i++) {
+          var a = Math.PI / 180 * (60 * i);
+          if (i === 0) b.moveTo(cx + s * Math.cos(a), cy + s * Math.sin(a));
+          else b.lineTo(cx + s * Math.cos(a), cy + s * Math.sin(a));
+        }
+        b.closePath();
+        b.stroke();
+      }
+    }
+  }
+
+  function drawBackground() {
+    if (!backdrop) buildBackdrop();
+    g.drawImage(backdrop, 0, 0);
+  }
+
+  function statChip(x, y, cw, ch, label, value, valueSize, labelSize) {
+    g.save();
+    g.fillStyle = 'rgba(255,255,255,0.72)';
+    roundRect(g, x, y, cw, ch, 14);
+    g.fill();
+    g.strokeStyle = 'rgba(42,111,119,0.22)';
+    g.lineWidth = 1.5;
+    g.stroke();
+    g.fillStyle = INK_SOFT;
+    g.font = '600 ' + labelSize + 'px ' + FONT;
+    g.textAlign = 'left';
+    g.fillText(label, x + 18, y + labelSize + 13);
+    g.fillStyle = INK;
+    g.font = '700 ' + valueSize + 'px ' + FONT;
+    g.fillText(value, x + 18, y + ch - 18);
+    g.restore();
+  }
+
+  var lastFalling = null, prevLines = 0, burstAt = -1e9, burstRows = 0;
+  var titleDeco = null, outroDeco = null;
+
+  function decoShapes() {
+    if (seenShapes.length >= 4) {
+      var sorted = seenShapes.slice().sort(function (a, b) { return b.rings - a.rings; });
+      return [sorted[0], sorted[sorted.length - 1], sorted[1], sorted[sorted.length - 2]];
+    }
+    return seenShapes.slice();
+  }
+
+  // Instagram and Shorts both lay controls over roughly the bottom 400px and
+  // the top 150px, so the whole composition stays inside y 150-1450.
+  var VL = { titleY: 190, taglineY: 240, chipsTop: 285, chipW: 300, chipH: 110,
+             chipGap: 24, boardTop: 445, boardH: 940, urlY: 1437 };
+  var PL = { titleY: 172, taglineY: 222, chipsTop: 258, chipW: 300, chipH: 110,
+             chipGap: 24, boardTop: 392, boardH: 760, selectedY: 1212,
+             trayLabelY: 1256, trayTop: 1270, trayW: 300, trayH: 124, trayGap: 24,
+             urlY: 1438 };
+  var BOARD_X = 86, BOARD_TOP = 40, BOARD_H = 640;
+
+  function drawBoardVertical(top, height) {
+    if (!boardCanvas || !boardCanvas.width) return (W - 436) / 2;
+    var scale = height / boardCanvas.height;
+    var bw = boardCanvas.width * scale;
+    var x = (W - bw) / 2;
+    g.save();
+    g.shadowColor = 'rgba(30,35,45,0.30)';
+    g.shadowBlur = 34;
+    g.shadowOffsetY = 14;
+    g.fillStyle = '#fffdf7';
+    roundRect(g, x - 26, top - 22, bw + 52, height + 44, 28);
+    g.fill();
+    g.restore();
+    g.drawImage(boardCanvas, x, top, bw, height);
+    return x;
+  }
+
+  function drawPanelVertical() {
+    var st = P.state();
+    g.textAlign = 'center';
+    g.fillStyle = INK;
+    g.font = '700 68px ' + FONT;
+    g.fillText('PAH Block Puzzle', W / 2, VL.titleY);
+    g.fillStyle = ACCENT;
+    g.font = '400 28px ' + FONT;
+    g.fillText(S.tagline, W / 2, VL.taglineY);
+    g.textAlign = 'left';
+
+    var total = VL.chipW * 3 + VL.chipGap * 2, x0 = (W - total) / 2;
+    var step = VL.chipW + VL.chipGap;
+    statChip(x0, VL.chipsTop, VL.chipW, VL.chipH, S.score, String(st.score), 48, 20);
+    statChip(x0 + step, VL.chipsTop, VL.chipW, VL.chipH, S.level, String(st.level), 48, 20);
+    statChip(x0 + step * 2, VL.chipsTop, VL.chipW, VL.chipH, S.lines, String(st.lines), 48, 20);
+
+    var boardX = drawBoardVertical(VL.boardTop, VL.boardH);
+    drawSidesVertical(boardX);
+
+    g.textAlign = 'center';
+    g.fillStyle = 'rgba(34,38,43,0.45)';
+    g.font = '500 26px ' + FONT;
+    g.fillText(SITE, W / 2, VL.urlY);
+    g.textAlign = 'left';
+  }
+
+  // The board leaves a usable gutter either side, so the falling molecule
+  // goes left and the queue right rather than eating vertical space.
+  function drawSidesVertical(boardX) {
+    var leftC = boardX / 2, rightC = W - boardX / 2;
+    if (P.current) lastFalling = P.current.shape;
+    g.textAlign = 'center';
+    g.fillStyle = INK_SOFT;
+    g.font = '600 22px ' + FONT;
+    g.fillText(S.falling, leftC, VL.boardTop + 36);
+    if (lastFalling) {
+      drawMoleculeFit(lastFalling, leftC, VL.boardTop + 140, 240, 150, 30, 1);
+      g.fillStyle = INK;
+      g.font = '700 30px ' + FONT;
+      g.fillText(lastFalling.name, leftC, VL.boardTop + 258);
+      g.fillStyle = ACCENT;
+      var fw = formulaWidth(g, lastFalling.formula, 28);
+      g.textAlign = 'left';
+      drawFormula(g, lastFalling.formula, leftC - fw / 2, VL.boardTop + 302, 28);
+      g.textAlign = 'center';
+    }
+    g.fillStyle = INK_SOFT;
+    g.font = '600 22px ' + FONT;
+    g.fillText(S.next, rightC, VL.boardTop + 36);
+    var queue = P.nextQueue || [];
+    for (var i = 0; i < Math.min(3, queue.length); i++) {
+      if (!queue[i]) continue;
+      var by = VL.boardTop + 74 + i * 168;
+      g.save();
+      g.fillStyle = 'rgba(255,255,255,0.62)';
+      roundRect(g, rightC - 132, by, 264, 150, 18);
+      g.fill();
+      g.restore();
+      drawMoleculeFit(queue[i].shape, rightC, by + 58, 205, 84, i === 0 ? 23 : 19);
+      g.fillStyle = INK_SOFT;
+      g.font = '600 20px ' + FONT;
+      g.fillText(queue[i].shape.name, rightC, by + 128);
+    }
+    g.textAlign = 'left';
+  }
+
+  // Placing's board is 7x9, wider than it is tall, leaving no side gutters.
+  // The tray goes underneath instead.
+  function drawPanelVerticalPlace() {
+    var st = P.state();
+    g.textAlign = 'center';
+    g.fillStyle = INK;
+    g.font = '700 68px ' + FONT;
+    g.fillText('PAH Block Puzzle', W / 2, PL.titleY);
+    g.fillStyle = ACCENT;
+    g.font = '400 28px ' + FONT;
+    g.fillText(S.tagline, W / 2, PL.taglineY);
+    g.textAlign = 'left';
+
+    var total = PL.chipW * 3 + PL.chipGap * 2, x0 = (W - total) / 2;
+    var step = PL.chipW + PL.chipGap;
+    statChip(x0, PL.chipsTop, PL.chipW, PL.chipH, S.score, String(st.score), 48, 20);
+    statChip(x0 + step, PL.chipsTop, PL.chipW, PL.chipH, S.lines, String(st.lines), 48, 20);
+    statChip(x0 + step * 2, PL.chipsTop, PL.chipW, PL.chipH, S.molecules, String(placeCount), 48, 20);
+
+    drawBoardVertical(PL.boardTop, PL.boardH);
+
+    var tray = P.tray || [], sel = P.selectedSlot;
+    // Held over between placements: nothing is selected for a moment after a
+    // molecule lands, and letting the name blink out every time is noisy.
+    if (sel >= 0 && tray[sel]) lastFalling = tray[sel].shape;
+    if (lastFalling) {
+      g.textAlign = 'left';
+      g.font = '700 40px ' + FONT;
+      var nameW = g.measureText(lastFalling.name).width;
+      var fw = formulaWidth(g, lastFalling.formula, 30);
+      var sx = (W - (nameW + 22 + fw)) / 2;
+      g.fillStyle = INK;
+      g.fillText(lastFalling.name, sx, PL.selectedY);
+      g.fillStyle = ACCENT;
+      drawFormula(g, lastFalling.formula, sx + nameW + 22, PL.selectedY + 2, 30);
+    }
+
+    g.textAlign = 'center';
+    g.fillStyle = INK_SOFT;
+    g.font = '600 22px ' + FONT;
+    g.fillText(S.tray, W / 2, PL.trayLabelY);
+    var tTotal = PL.trayW * 3 + PL.trayGap * 2, tx0 = (W - tTotal) / 2;
+    for (var i = 0; i < 3; i++) {
+      var bx = tx0 + i * (PL.trayW + PL.trayGap), slot = tray[i];
+      g.save();
+      g.fillStyle = slot ? 'rgba(255,255,255,0.68)' : 'rgba(255,255,255,0.22)';
+      roundRect(g, bx, PL.trayTop, PL.trayW, PL.trayH, 18);
+      g.fill();
+      if (slot && i === sel) { g.strokeStyle = ACCENT; g.lineWidth = 4; g.stroke(); }
+      g.restore();
+      if (!slot) continue;
+      drawMoleculeFit(slot.shape, bx + PL.trayW / 2, PL.trayTop + 48, 230, 72, 21);
+      g.fillStyle = INK_SOFT;
+      g.font = '600 20px ' + FONT;
+      g.fillText(slot.shape.name, bx + PL.trayW / 2, PL.trayTop + 106);
+    }
+    g.fillStyle = 'rgba(34,38,43,0.45)';
+    g.font = '500 26px ' + FONT;
+    g.fillText(SITE, W / 2, PL.urlY);
+    g.textAlign = 'left';
+  }
+
+  function drawPanelWide() {
+    var st = P.state();
+    var x = 440;
+    if (boardCanvas && boardCanvas.width) {
+      var scale = BOARD_H / boardCanvas.height, bw = boardCanvas.width * scale;
+      g.save();
+      g.shadowColor = 'rgba(30,35,45,0.28)';
+      g.shadowBlur = 26;
+      g.shadowOffsetY = 10;
+      g.fillStyle = '#fffdf7';
+      roundRect(g, BOARD_X - 22, BOARD_TOP - 18, bw + 44, BOARD_H + 36, 22);
+      g.fill();
+      g.restore();
+      g.drawImage(boardCanvas, BOARD_X, BOARD_TOP, bw, BOARD_H);
+    }
+    g.textAlign = 'left';
+    g.fillStyle = INK;
+    g.font = '700 62px ' + FONT;
+    g.fillText('PAH Block Puzzle', x, 96);
+    g.fillStyle = ACCENT;
+    g.font = '400 26px ' + FONT;
+    g.fillText(S.tagline, x, 134);
+    statChip(x, 170, 250, 104, S.score, String(st.score), 44, 17);
+    statChip(x + 268, 170, 165, 104, S.level, String(st.level), 34, 17);
+    statChip(x + 451, 170, 165, 104, S.lines, String(st.lines), 34, 17);
+    if (P.current) lastFalling = P.current.shape;
+    g.fillStyle = INK_SOFT;
+    g.font = '600 17px ' + FONT;
+    g.fillText(S.falling, x, 330);
+    if (lastFalling) {
+      drawMolecule(g, lastFalling, 27, x + 92, 400, 1);
+      g.fillStyle = INK;
+      g.font = '700 34px ' + FONT;
+      g.fillText(lastFalling.name, x + 200, 392);
+      g.fillStyle = ACCENT;
+      drawFormula(g, lastFalling.formula, x + 200, 430, 27);
+    }
+    g.fillStyle = INK_SOFT;
+    g.font = '600 17px ' + FONT;
+    g.fillText(S.next, x, 500);
+    var queue = P.nextQueue || [];
+    for (var i = 0; i < Math.min(3, queue.length); i++) {
+      if (!queue[i]) continue;
+      var bx = x + 70 + i * 185;
+      g.save();
+      g.fillStyle = 'rgba(255,255,255,0.6)';
+      roundRect(g, bx - 68, 520, 150, 118, 14);
+      g.fill();
+      g.restore();
+      drawMoleculeFit(queue[i].shape, bx + 7, 570, 130, 90, i === 0 ? 17 : 14, i === 0 ? 1 : 0.7);
+      g.fillStyle = INK_SOFT;
+      g.font = '600 14px ' + FONT;
+      g.textAlign = 'center';
+      g.fillText(queue[i].shape.name, bx + 7, 626);
+      g.textAlign = 'left';
+    }
+    g.fillStyle = 'rgba(34,38,43,0.45)';
+    g.font = '500 20px ' + FONT;
+    g.fillText(SITE, x, 686);
+  }
+
+  function drawBurst(t) {
+    var age = t - burstAt;
+    if (age < 0 || age > 1400) return;
+    var k = age / 1400;
+    var label = burstRows === 1 ? S.cleared1 : S.clearedN.replace('{n}', burstRows);
+    g.save();
+    g.globalAlpha = 1 - k * k;
+    g.translate(0, -18 * k);
+    g.textAlign = 'center';
+    var cx = VERTICAL ? W / 2 : BOARD_X + 142;
+    var by = VERTICAL ? (PLACING ? PL.boardTop + 300 : VL.boardTop + 392) : 300;
+    var size = VERTICAL ? 38 : 30;
+    g.font = '700 ' + size + 'px ' + FONT;
+    var tw = g.measureText(label).width;
+    g.fillStyle = 'rgba(42,111,119,0.94)';
+    roundRect(g, cx - tw / 2 - 26, by, tw + 52, size + 26, 30);
+    g.fill();
+    g.fillStyle = '#fffdf7';
+    g.fillText(label, cx, by + size + 6);
+    g.textAlign = 'left';
+    g.restore();
+  }
+
+  // ------------------------------------------------------------------ cards
+  function drawCardVertical(alpha, deco, sub, sub2, pill) {
+    g.save();
+    g.globalAlpha = alpha;
+    var grad = g.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#f8f5ee');
+    grad.addColorStop(1, '#ded6c3');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, W, H);
+    var spots = [[215, 430, 40], [875, 395, 38], [210, 1330, 36], [870, 1370, 36]];
+    for (var j = 0; j < spots.length && j < deco.length; j++) {
+      drawMoleculeFit(deco[j], spots[j][0], spots[j][1], 330, 210, spots[j][2]);
+    }
+    g.textAlign = 'center';
+    g.fillStyle = INK;
+    g.font = '700 80px ' + FONT;
+    g.fillText('PAH Block Puzzle', W / 2, 872);
+    g.fillStyle = ACCENT;
+    g.font = '400 30px ' + FONT;
+    g.fillText(sub, W / 2, 938);
+    if (sub2) {
+      g.fillStyle = 'rgba(34,38,43,0.55)';
+      g.font = '500 26px ' + FONT;
+      g.fillText(sub2, W / 2, 992);
+    }
+    if (pill) {
+      g.font = '600 30px ' + FONT;
+      var tw = g.measureText(pill).width;
+      g.fillStyle = 'rgba(255,255,255,0.78)';
+      roundRect(g, W / 2 - tw / 2 - 30, 982, tw + 60, 70, 20);
+      g.fill();
+      g.strokeStyle = 'rgba(42,111,119,0.3)';
+      g.lineWidth = 2;
+      g.stroke();
+      g.fillStyle = INK;
+      g.fillText(pill, W / 2, 1028);
+    }
+    g.textAlign = 'left';
+    g.restore();
+  }
+
+  function drawTitleWide(alpha, deco) {
+    g.save();
+    g.globalAlpha = alpha;
+    var grad = g.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#f8f5ee');
+    grad.addColorStop(1, '#ded6c3');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, W, H);
+    var spots = [[1065, 150, 42], [190, 150, 38], [1065, 570, 38], [190, 570, 34]];
+    for (var j = 0; j < spots.length && j < deco.length; j++) {
+      drawMoleculeFit(deco[j], spots[j][0], spots[j][1], 320, 200, spots[j][2]);
+    }
+    g.textAlign = 'center';
+    g.fillStyle = INK;
+    g.font = '700 96px ' + FONT;
+    g.fillText('PAH Block Puzzle', W / 2, 330);
+    g.fillStyle = ACCENT;
+    g.font = '400 36px ' + FONT;
+    g.fillText(PLACING ? S.heroSubPlace : S.heroSub, W / 2, 392);
+    g.fillStyle = 'rgba(34,38,43,0.55)';
+    g.font = '500 26px ' + FONT;
+    g.fillText(PLACING ? S.heroSub2Place : S.heroSub2, W / 2, 440);
+    g.textAlign = 'left';
+    g.restore();
+  }
+
+  // ------------------------------------------------------- search end card
+  //
+  // A generic search box, deliberately not Google's: no wordmark, no
+  // four-colour glyph, no imitation of their results page. Using a real
+  // company's interface to advertise something is their trademark to license,
+  // and the point here is only "this is the thing to look for" -- which a
+  // plain search box says just as well. What it shows as the result is the
+  // page's own real title and description.
+  function drawSearchCard(alpha, t, deco) {
+    var boxX = 70, boxW = W - 140, boxY = 584, boxH = 132;
+    g.save();
+    g.globalAlpha = alpha;
+    g.fillStyle = '#fbfaf6';
+    g.fillRect(0, 0, W, H);
+
+    // A few molecules up top, so the card still belongs to the game rather
+    // than looking like a stock screenshot of a search box.
+    var spots = [[210, 300, 36], [540, 268, 34], [870, 300, 32]];
+    for (var j = 0; j < spots.length && j < deco.length; j++) {
+      drawMoleculeFit(deco[j], spots[j][0], spots[j][1], 280, 180, spots[j][2],
+                      alpha * 0.85 * phase(t, 0, 500));
+    }
+
+    g.textAlign = 'center';
+    g.fillStyle = INK_SOFT;
+    g.globalAlpha = alpha * phase(t, 150, 700);
+    g.font = '500 32px ' + FONT;
+    g.fillText(S.searchPrompt, W / 2, 504);
+    g.globalAlpha = alpha;
+
+    // Box
+    var boxIn = phase(t, 250, 900);
+    g.save();
+    g.globalAlpha = alpha * boxIn;
+    g.translate(0, (1 - boxIn) * 30);
+    g.shadowColor = 'rgba(30,35,45,0.16)';
+    g.shadowBlur = 24;
+    g.shadowOffsetY = 6;
+    g.fillStyle = '#ffffff';
+    roundRect(g, boxX, boxY, boxW, boxH, boxH / 2);
+    g.fill();
+    g.restore();
+    g.save();
+    g.globalAlpha = alpha * boxIn;
+    g.translate(0, (1 - boxIn) * 30);
+    g.strokeStyle = 'rgba(34,38,43,0.14)';
+    g.lineWidth = 2;
+    roundRect(g, boxX, boxY, boxW, boxH, boxH / 2);
+    g.stroke();
+
+    // Magnifier
+    var mx = boxX + 74, my = boxY + boxH / 2;
+    g.strokeStyle = INK_SOFT;
+    g.lineWidth = 5;
+    g.beginPath();
+    g.arc(mx, my - 4, 20, 0, Math.PI * 2);
+    g.stroke();
+    g.beginPath();
+    g.moveTo(mx + 14, my + 11);
+    g.lineTo(mx + 28, my + 25);
+    g.stroke();
+
+    // Typed query, one character at a time
+    var typed = Math.floor(phase(t, 700, 2100) * SEARCH_QUERY.length);
+    var shown = SEARCH_QUERY.slice(0, typed);
+    g.textAlign = 'left';
+    g.fillStyle = INK;
+    g.font = '500 44px ' + FONT;
+    g.fillText(shown, boxX + 124, my + 16);
+    if (t < 2200 && Math.floor(t / 420) % 2 === 0) {
+      var cx = boxX + 124 + g.measureText(shown).width + 4;
+      g.fillStyle = ACCENT;
+      g.fillRect(cx, my - 26, 3, 52);
+    }
+
+    // Button, pressed as the query completes
+    var pressed = t > 2100 && t < 2500;
+    var bw2 = 168, bx = boxX + boxW - bw2 - 20, by2 = boxY + 19, bh2 = boxH - 38;
+    g.fillStyle = pressed ? '#1f565c' : ACCENT;
+    roundRect(g, bx, by2, bw2, bh2, bh2 / 2);
+    g.fill();
+    g.fillStyle = '#ffffff';
+    g.font = '600 34px ' + FONT;
+    g.textAlign = 'center';
+    g.fillText(S.searchButton, bx + bw2 / 2, by2 + bh2 / 2 + 12);
+    g.restore();
+
+    // Result
+    var resIn = phase(t, 2400, 3100);
+    if (resIn <= 0) { g.textAlign = 'left'; g.restore(); return; }
+    g.save();
+    g.globalAlpha = alpha * resIn;
+    g.translate(0, (1 - resIn) * 26);
+    var rx = boxX, ry = 804, rw = boxW, rh = 360;
+    g.fillStyle = '#ffffff';
+    g.shadowColor = 'rgba(30,35,45,0.10)';
+    g.shadowBlur = 18;
+    g.shadowOffsetY = 5;
+    roundRect(g, rx, ry, rw, rh, 24);
+    g.fill();
+    g.shadowColor = 'transparent';
+
+    // Favicon: the game's own benzene, rather than a borrowed mark.
+    g.save();
+    g.translate(rx + 48, ry + 58);
+    g.beginPath();
+    for (var i = 0; i < 6; i++) {
+      var a = Math.PI / 180 * (60 * i);
+      if (i === 0) g.moveTo(20 * Math.cos(a), 20 * Math.sin(a));
+      else g.lineTo(20 * Math.cos(a), 20 * Math.sin(a));
+    }
+    g.closePath();
+    g.fillStyle = '#e63946';
+    g.fill();
+    g.restore();
+
+    g.textAlign = 'left';
+    g.fillStyle = INK_SOFT;
+    g.font = '400 26px ' + FONT;
+    g.fillText(SITE.replace('/', '  ›  '), rx + 84, ry + 68);
+
+    g.fillStyle = '#1a4f8a';
+    g.font = '600 40px ' + FONT;
+    var titleLines = wrapLines(g, S.resultTitle, rw - 96, 2);
+    titleLines.forEach(function (ln, i) { g.fillText(ln, rx + 48, ry + 136 + i * 50); });
+
+    g.fillStyle = INK_SOFT;
+    g.font = '400 27px ' + FONT;
+    var snip = wrapLines(g, S.resultSnippet, rw - 96, 3);
+    snip.forEach(function (ln, i) {
+      g.fillText(ln, rx + 48, ry + 148 + titleLines.length * 50 + i * 40);
+    });
+    g.restore();
+
+    g.textAlign = 'left';
+    g.restore();
+  }
+
+  // ------------------------------------------------------------- compositor
+  function drawFrame(t) {
+    var lines = P.state().lines;
+    if (lines > prevLines) { burstRows = lines - prevLines; burstAt = t; }
+    prevLines = lines;
+
+    drawBackground();
+    if (VERTICAL) {
+      if (PLACING) drawPanelVerticalPlace(); else drawPanelVertical();
+    } else {
+      drawPanelWide();
+    }
+    drawBurst(t);
+
+    if (t < T_TITLE_END) {
+      var a = t < T_TITLE_HOLD ? 1 : 1 - (t - T_TITLE_HOLD) / (T_TITLE_END - T_TITLE_HOLD);
+      if (!titleDeco) titleDeco = decoShapes();
+      if (VERTICAL) {
+        drawCardVertical(a, titleDeco, PLACING ? S.heroSubPlace : S.heroSub,
+                         PLACING ? S.heroSub2Place : S.heroSub2, null);
+      } else {
+        drawTitleWide(a, titleDeco);
+      }
+    }
+    if (t > T_OUTRO_IN) {
+      var oa = Math.min(1, (t - T_OUTRO_IN) / 600);
+      if (!outroDeco) outroDeco = decoShapes();
+      if (ENDCARD === 'search' && VERTICAL) {
+        drawSearchCard(oa, t - T_OUTRO_IN, outroDeco);
+      } else if (VERTICAL) {
+        drawCardVertical(oa, outroDeco, S.outro, null, SITE);
+      } else {
+        drawTitleWide(oa, outroDeco);
+      }
+    }
+  }
+
+  // -------------------------------------------------------------- recording
+  var recorders = [], startedAt = 0, botTimer = null, videoTrack = null;
+  var uploadsDone = 0, frames = 0, ticks = 0;
+  // Sorted and trimmed: the loop only ever looks at snapshots[0], so one
+  // out-of-order entry blocks every later one behind it.
+  var snapshots = [900, 9000, 15000, T_OUTRO_IN + 1200, T_OUTRO_IN + 2300,
+                   T_OUTRO_IN + 3600, T_OUTRO_IN + 5200]
+    .filter(function (ms) { return ms < T_OUTRO_END; })
+    .sort(function (a, b) { return a - b; });
+
+  // A single multi-megabyte POST is aborted partway through at the other end,
+  // so the blob goes up a megabyte at a time. Strictly sequential, or the
+  // parts arrive out of order.
+  function uploadBlob(name, blob, done) {
+    var CHUNK = 1024 * 1024;
+    var parts = Math.ceil(blob.size / CHUNK), i = 0, tries = 0;
+    (function sendNext() {
+      if (i >= parts) {
+        log('uploaded ' + name + ' (' + blob.size + ' bytes)');
+        if (done) done();
+        return;
+      }
+      var idx = i;
+      var slice = blob.slice(idx * CHUNK, Math.min(blob.size, (idx + 1) * CHUNK));
+      fetch('/upload?name=' + name + '&part=' + idx, { method: 'POST', body: slice })
+        .then(function () { i++; tries = 0; sendNext(); },
+              function (e) {
+                tries++;
+                log('part ' + idx + ' failed (' + tries + '): ' + e);
+                if (tries < 4) setTimeout(sendNext, 400);
+              });
+    })();
+  }
+
+  // The two recorders stop within milliseconds of each other, and two large
+  // uploads running side by side wedge after their first part.
+  var uploadQueue = [], uploadBusy = false;
+
+  function enqueueUpload(name, blob, done) {
+    uploadQueue.push({ name: name, blob: blob, done: done });
+    pumpUploads();
+  }
+
+  function pumpUploads() {
+    if (uploadBusy || !uploadQueue.length) return;
+    uploadBusy = true;
+    var job = uploadQueue.shift();
+    uploadBlob(job.name, job.blob, function () {
+      uploadBusy = false;
+      if (job.done) job.done();
+      pumpUploads();
+    });
+  }
+
+  // Opens on a board that already has something on it: an empty grid reads as
+  // "nothing has happened yet" in the first second of a Short.
+  function warmup() {
+    var n = 0, target = PLACING ? 16 : 24;
+    var iv = setInterval(function () {
+      botTick();
+      n++;
+      if (P.board.size >= target || n > 900) {
+        clearInterval(iv);
+        log('warmup done, cells=' + P.board.size);
+        setTimeout(startRecording, 300);
+      }
+    }, 16);
+  }
+
+  function startRecording() {
+    // captureStream(0) means "only the frames I hand you", so one composed
+    // frame is exactly one video frame however the rAF clock behaves.
+    var stream = promo.captureStream(0);
+    videoTrack = stream.getVideoTracks()[0];
+    [{ mime: 'video/mp4', name: 'pah-' + TAKE + '.mp4' },
+     { mime: 'video/webm;codecs=vp9', name: 'pah-' + TAKE + '.webm' }].forEach(function (spec) {
+      if (!window.MediaRecorder || !MediaRecorder.isTypeSupported(spec.mime)) {
+        log('unsupported: ' + spec.mime);
+        return;
+      }
+      try {
+        var rec = new MediaRecorder(stream, { mimeType: spec.mime, videoBitsPerSecond: BITRATE });
+        var chunks = [];
+        rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        rec.onstop = function () {
+          var blob = new Blob(chunks, { type: spec.mime });
+          enqueueUpload(spec.name, blob, function () {
+            uploadsDone++;
+            // The take is only safe to tear down once every byte is on disk.
+            if (uploadsDone >= recorders.length) post('/upload?name=done-' + TAKE + '.txt', 'ok');
+          });
+        };
+        rec.start();
+        recorders.push(rec);
+      } catch (e) {
+        log('recorder failed ' + spec.mime + ': ' + e.message);
+      }
+    });
+
+    botTimer = setInterval(botTick, PLACING ? 88 : 78);
+    startedAt = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function loop(now) {
+    var t = now - startedAt;
+    ticks++;
+    if (ticks % FRAME_SKIP === 0) {
+      frames++;
+      drawFrame(t);
+      if (videoTrack) videoTrack.requestFrame();
+      if (snapshots.length && t >= snapshots[0]) {
+        var at = Math.round(snapshots.shift());
+        promo.toBlob(function (b) { post('/upload?name=frame' + SUFFIX + '-' + at + '.jpg', b); },
+                     'image/jpeg', 0.92);
+      }
+    }
+    if (t >= T_OUTRO_END) {
+      clearInterval(botTimer);
+      var st = P.state();
+      var summary = 'frames=' + frames + ' elapsed=' + Math.round(t)
+        + ' fps=' + (frames / (t / 1000)).toFixed(1) + ' score=' + st.score
+        + ' lines=' + st.lines + ' pieces=' + (PLACING ? placeCount : (w.__promoPieceId || 0))
+        + ' hardDrops=' + hardDrops + ' stuckDrops=' + stuckDrops
+        + ' gameOvers=' + gameOvers;
+      log(summary);
+      post('/upload?name=summary-' + TAKE + '.txt', summary);
+      setTimeout(function () {
+        recorders.forEach(function (r) { try { r.stop(); } catch (e) {} });
+      }, 120);
+      return;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
